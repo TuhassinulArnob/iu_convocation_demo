@@ -1,6 +1,5 @@
 // Central API client for IU Convocation 2027 Demo Portal
-
-const API_BASE = '/api';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 export function getAuthToken(): string | null {
   // Check session storage first (for manual admin sessions), then persistent local storage for students

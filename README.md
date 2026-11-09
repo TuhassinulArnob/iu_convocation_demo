@@ -211,6 +211,21 @@ python scripts/run_final_audit.py
 ```
 *(Executes full registration with user-defined passwords, bKash & Rocket simulations, cancellation, and captures 65 multi-viewport screenshots in `screenshots/final-responsive-audit/`)*
 
+### Step 5: Deploy to Vercel (Multi-Service Project)
+The repository is configured as a single Vercel project with two services (`backend` and `frontend`) via [`vercel.json`](./vercel.json):
+1. **Local Multi-Service Development:**
+   ```bash
+   vercel dev
+   ```
+2. **Deploy to Vercel:**
+   ```bash
+   vercel deploy
+   # Or for production:
+   vercel deploy --prod
+   ```
+* Public routes `/api/*`, `/uploads/*`, `/docs`, and `/openapi.json` are automatically routed to the FastAPI `backend`.
+* All client navigation routes `/*` are routed to the Vite React `frontend` with SPA fallback.
+
 ### Demonstration Contact & Credits:
 * **Project Developer:** Arnob ([GitHub Profile](https://github.com/TuhassinulArnob))
 * **Official University Reference:** [`convocation@iu.ac.bd`](mailto:convocation@iu.ac.bd)
