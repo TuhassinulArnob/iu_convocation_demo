@@ -73,38 +73,38 @@ export const Navbar: React.FC = () => {
       {/* Main Navbar Row (Refined height 78-84px) */}
       <div className="border-b border-stone-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 gap-3 sm:gap-6 min-w-0">
+          <div className="flex items-center justify-between h-20 gap-2 sm:gap-4 lg:gap-6 min-w-0">
             
-            {/* Left: University Logo & Typography Branding (23-25px target) */}
+            {/* Left: University Logo & Complete Branding (23-24px target, zero truncation) */}
             <Link 
               to="/" 
-              className="flex items-center gap-3 sm:gap-3.5 group focus:outline-none min-w-0 shrink"
+              className="flex items-center gap-3 sm:gap-3.5 group focus:outline-none shrink-0"
               title="Islamic University Bangladesh - 5th Convocation 2027"
             >
               <img 
                 src="/assets/logo/iuLogo.png" 
                 alt="Islamic University Logo" 
-                className="h-11 sm:h-12 lg:h-[52px] w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
+                className="h-11 sm:h-12 lg:h-[54px] w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
               />
-              <div className="flex flex-col justify-center min-w-0">
-                <span className="text-[15px] sm:text-[19px] lg:text-[22px] xl:text-[24px] font-bold text-[#153A37] tracking-tight leading-none truncate sm:whitespace-nowrap">
+              <div className="flex flex-col justify-center">
+                <span className="text-[16px] sm:text-[20px] md:text-[22px] lg:text-[23px] xl:text-[24px] font-bold text-[#153A37] tracking-tight leading-tight whitespace-normal sm:whitespace-nowrap">
                   Islamic University Bangladesh
                 </span>
-                <span className="text-[9.5px] sm:text-[11px] xl:text-[11.5px] font-semibold text-[#F3A052] tracking-wider uppercase mt-1 truncate sm:whitespace-nowrap">
+                <span className="text-[9.5px] sm:text-[11px] xl:text-[11.5px] font-semibold text-[#F3A052] tracking-wider uppercase mt-0.5 whitespace-normal sm:whitespace-nowrap">
                   5TH CONVOCATION 2027 · REGISTRATION
                 </span>
               </div>
             </Link>
 
             {/* Center: Desktop Navigation Links (Refined 15-16px, balanced gaps) */}
-            <div className="hidden xl:flex items-center gap-4 2xl:gap-6 shrink-0">
+            <div className="hidden xl:flex items-center gap-3.5 2xl:gap-5 shrink-0">
               {navLinks.map((link) => {
                 const active = isActive(link.path);
                 return (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`text-[15px] 2xl:text-[16px] transition-colors whitespace-nowrap pb-1 ${
+                    className={`text-[15px] xl:text-[15.5px] 2xl:text-[16px] transition-colors whitespace-nowrap pb-1 ${
                       active
                         ? 'text-[#075C55] font-semibold border-b-2 border-[#117A78]'
                         : 'text-stone-700 font-medium hover:text-[#075C55] border-b-2 border-transparent'
@@ -116,7 +116,7 @@ export const Navbar: React.FC = () => {
               })}
             </div>
 
-            {/* Right: Desktop Action Buttons (Refined 42-44px height, balanced padding) */}
+            {/* Right: Desktop Action Buttons (Refined 48px height, balanced padding) */}
             <div className="hidden xl:flex items-center gap-2.5 2xl:gap-3 shrink-0">
               {token ? (
                 <div className="flex items-center gap-2 shrink-0">

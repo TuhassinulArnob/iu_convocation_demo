@@ -138,7 +138,7 @@ def seed_database(db: Session):
         app_1 = Application(
             app_id="IU27-DEMO-000101",
             user_id=demo_student_1.id,
-            full_name="Md. Tuhassinul Islam Arnob",
+            full_name="Arnob",
             father_name="Md. Rafiqul Islam",
             mother_name="Mrs. Tahmina Khatun",
             date_of_birth="1999-05-14",

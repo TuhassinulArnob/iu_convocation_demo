@@ -51,21 +51,10 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3">
-                <Mail className="w-4 h-4 text-gold-warm mt-1 shrink-0" />
-                <div>
-                  <span className="text-xs text-stone-400 block font-medium">Demonstration Support E-mail</span>
-                  <a href="mailto:arnob.ict.iu@gmail.com" className="text-teal-deep font-bold hover:underline">
-                    arnob.ict.iu@gmail.com
-                  </a>
-                  <span className="text-[11px] text-stone-500 block">Demonstration Portal Developer & Technical Support</span>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-stone-400 mt-1 shrink-0" />
                 <div>
                   <span className="text-xs text-stone-400 block font-medium">Official University E-mail (Reference)</span>
-                  <a href="mailto:convocation@iu.ac.bd" className="text-stone-600 font-medium hover:underline">
+                  <a href="mailto:convocation@iu.ac.bd" className="text-stone-700 font-semibold hover:underline">
                     convocation@iu.ac.bd
                   </a>
                 </div>
@@ -74,7 +63,7 @@ export const ContactPage: React.FC = () => {
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-gold-warm mt-1 shrink-0" />
                 <div>
-                  <span className="text-xs text-stone-400 block font-medium">Official PABX</span>
+                  <span className="text-xs text-stone-400 block font-medium">Official PABX (Reference)</span>
                   <p className="text-stone-800 font-medium">
                     +880-247778-6500 (Ext. Convocation Cell)
                   </p>
@@ -101,6 +90,37 @@ export const ContactPage: React.FC = () => {
                 <span>Islamic University Official Website</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
+            </div>
+
+            {/* Project Developer Section — Clearly Distinguished from Official Info */}
+            <div className="mt-5 pt-5 border-t border-stone-200/80 bg-stone-50/70 -mx-6 -mb-6 p-6 rounded-b-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-500">
+                  Project Developer
+                </h4>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-semibold">
+                  Unofficial Demo
+                </span>
+              </div>
+              <div>
+                <p className="text-base font-bold text-teal-dark">Arnob</p>
+                <p className="text-xs text-stone-500 font-mono mt-0.5">
+                  GitHub: github.com/TuhassinulArnob
+                </p>
+              </div>
+              <div>
+                <a
+                  href="https://github.com/TuhassinulArnob"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition shadow-sm"
+                >
+                  <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                  </svg>
+                  <span>Visit GitHub Profile ↗</span>
+                </a>
+              </div>
             </div>
           </div>
 

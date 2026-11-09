@@ -3,19 +3,35 @@
 const API_BASE = '/api';
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem('iu_convocation_token');
+  // Check session storage first (for manual admin sessions), then persistent local storage for students
+  return sessionStorage.getItem('iu_convocation_admin_token') || localStorage.getItem('iu_convocation_token');
 }
 
-export function setAuthToken(token: string): void {
-  localStorage.setItem('iu_convocation_token', token);
+export function setAuthToken(token: string, isAdmin: boolean = false): void {
+  if (isAdmin) {
+    sessionStorage.setItem('iu_convocation_admin_token', token);
+  } else {
+    localStorage.setItem('iu_convocation_token', token);
+  }
 }
 
 export function clearAuthToken(): void {
+  sessionStorage.removeItem('iu_convocation_admin_token');
+  sessionStorage.removeItem('iu_convocation_admin_user');
   localStorage.removeItem('iu_convocation_token');
   localStorage.removeItem('iu_convocation_user');
 }
 
 export function getCurrentUser(): any | null {
+  const adminData = sessionStorage.getItem('iu_convocation_admin_user');
+  if (adminData) {
+    try {
+      return JSON.parse(adminData);
+    } catch {
+      // ignore
+    }
+  }
+
   const data = localStorage.getItem('iu_convocation_user');
   if (!data) return null;
   try {
@@ -25,8 +41,12 @@ export function getCurrentUser(): any | null {
   }
 }
 
-export function setCurrentUser(user: any): void {
-  localStorage.setItem('iu_convocation_user', JSON.stringify(user));
+export function setCurrentUser(user: any, isAdmin: boolean = false): void {
+  if (isAdmin || user?.role === 'admin') {
+    sessionStorage.setItem('iu_convocation_admin_user', JSON.stringify(user));
+  } else {
+    localStorage.setItem('iu_convocation_user', JSON.stringify(user));
+  }
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

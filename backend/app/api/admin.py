@@ -148,6 +148,23 @@ def list_applications(
         "total_pages": (total_count + page_size - 1) // page_size if total_count > 0 else 1
     }
 
+def mask_mobile(val: str = None) -> str:
+    if not val:
+        return "N/A"
+    clean = str(val).strip()
+    if len(clean) >= 7:
+        return f"{clean[:3]}••••{clean[-4:]}"
+    return "•••••••"
+
+def mask_email(val: str = None) -> str:
+    if not val or "@" not in str(val):
+        return "N/A"
+    parts = str(val).strip().split("@")
+    user, domain = parts[0], parts[1]
+    if len(user) <= 2:
+        return f"{user[0]}••@{domain}"
+    return f"{user[:2]}••••@{domain}"
+
 @router.get("/applications/{app_id_or_int}")
 def get_application_detail(
     app_id_or_int: str,
@@ -199,8 +216,10 @@ def get_application_detail(
         "mother_name": app.mother_name,
         "date_of_birth": app.date_of_birth,
         "gender": app.gender,
-        "mobile": app.mobile,
-        "email": app.email,
+        "mobile": mask_mobile(app.mobile),
+        "email": mask_email(app.email),
+        "mobile_masked": mask_mobile(app.mobile),
+        "email_masked": mask_email(app.email),
         "present_address": app.present_address,
         "permanent_address": app.permanent_address,
         "department_id": app.department_id,

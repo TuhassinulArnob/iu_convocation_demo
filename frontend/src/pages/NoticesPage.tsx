@@ -234,7 +234,7 @@ export const NoticesPage: React.FC = () => {
               <div>
                 <p className="font-semibold text-amber-950">Questions about a notice?</p>
                 <p className="mt-1">
-                  Write to <a href="mailto:arnob.ict.iu@gmail.com" className="font-bold underline text-teal-dark">arnob.ict.iu@gmail.com</a> (Demo Support) or check the <Link to="/contact" className="underline font-bold">Contact Us</Link> page.
+                  Please visit the <Link to="/contact" className="underline font-bold text-teal-dark">Contact Us</Link> page for developer information and official university references.
                 </p>
               </div>
             </div>

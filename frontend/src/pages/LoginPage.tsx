@@ -51,7 +51,7 @@ export const LoginPage: React.FC = () => {
   };
 
   const fillDemoStudent = () => {
-    setIdentifier('01811860339');
+    setIdentifier('1812045');
     setPassword('StudentIU@2027');
     setError(null);
   };
@@ -142,7 +142,7 @@ export const LoginPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 01811860339 or arnob.ict.iu@gmail.com"
+                  placeholder="e.g. Roll No 1812045 or student email"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-deep focus:bg-white transition"
@@ -251,7 +251,7 @@ export const LoginPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 01811860339"
+                  placeholder="e.g. Roll No 1812045"
                   value={forgotIdent}
                   onChange={(e) => setForgotIdent(e.target.value)}
                   className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-lg text-xs"

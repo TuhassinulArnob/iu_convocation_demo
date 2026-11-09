@@ -128,7 +128,7 @@ The database is seeded automatically with synthetic accounts for testing:
 * **Capabilities:** View statistics, review all student applications, change status with review notes (Approved/Rejected/Correction), manage notices, export CSVs.
 
 ### 2. Demonstration Student 1 (Approved Candidate)
-* **Identifier (Mobile):** `01811860339` (or Email: `arnob.ict@gmail.com` or Roll: `1812045`)
+* **Identifier (Student Roll):** `1812045` (or Email: `student@convocation.iu.ac.bd`)
 * **Password:** `StudentIU@2027`
 * **Application ID:** `IU27-DEMO-000101`
 * **Department:** Information and Communication Technology (ICT)
@@ -211,10 +211,10 @@ python scripts/run_final_audit.py
 ```
 *(Executes full registration with user-defined passwords, bKash & Rocket simulations, cancellation, and captures 65 multi-viewport screenshots in `screenshots/final-responsive-audit/`)*
 
-### Demonstration Contact:
-* **Demo Technical Support:** [`arnob.ict.iu@gmail.com`](mailto:arnob.ict.iu@gmail.com)
+### Demonstration Contact & Credits:
+* **Project Developer:** Arnob ([GitHub Profile](https://github.com/TuhassinulArnob))
 * **Official University Reference:** [`convocation@iu.ac.bd`](mailto:convocation@iu.ac.bd)
-* **Comprehensive Audit Report:** See [`FINAL_UI_AUDIT_REPORT.md`](./FINAL_UI_AUDIT_REPORT.md)
+* **Comprehensive Stability & UI Audit Report:** See [`ADMIN_STABILITY_AUDIT.md`](./ADMIN_STABILITY_AUDIT.md) and [`FINAL_UI_AUDIT_REPORT.md`](./FINAL_UI_AUDIT_REPORT.md)
 
 ---
 
