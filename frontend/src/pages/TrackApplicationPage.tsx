@@ -185,6 +185,28 @@ export const TrackApplicationPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Correction Required Notice if applicable */}
+            {(trackResult.status?.toLowerCase().includes('correct') || trackResult.review_note?.toLowerCase().includes('correct')) && (
+              <div className="p-5 bg-amber-50 border-b border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>Correction Required by Convocation Committee</span>
+                  </div>
+                  <p className="text-amber-900 leading-relaxed">
+                    {trackResult.review_note || "Your application requires correction. Please sign in to your student dashboard to update the requested information."}
+                  </p>
+                </div>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-sm whitespace-nowrap shrink-0 flex items-center justify-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In & Edit Application</span>
+                </Link>
+              </div>
+            )}
+
             {/* Visual Timeline Section */}
             <div className="p-6 sm:p-8">
               <h3 className="text-sm font-bold text-teal-dark uppercase tracking-wider mb-6">

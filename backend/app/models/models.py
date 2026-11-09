@@ -73,6 +73,12 @@ class Application(Base):
     current_step = Column(Integer, default=1) # 1 to 8
     review_note = Column(Text, nullable=True)
 
+    # Correction workflow fields
+    correction_instructions = Column(Text, nullable=True)
+    correction_categories = Column(Text, default="[]") # JSON list of string categories
+    correction_requested_at = Column(DateTime, nullable=True)
+    resubmitted_at = Column(DateTime, nullable=True)
+
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
@@ -81,6 +87,8 @@ class Application(Base):
     fee_breakdown = relationship("FeeBreakdown", back_populates="application", uselist=False, cascade="all, delete-orphan")
     payments = relationship("PaymentSimulation", back_populates="application", cascade="all, delete-orphan")
     status_history = relationship("ApplicationStatusHistory", back_populates="application", cascade="all, delete-orphan")
+    revisions = relationship("ApplicationRevision", back_populates="application", cascade="all, delete-orphan")
+    convocation_cards = relationship("ConvocationCard", back_populates="application", cascade="all, delete-orphan")
 
 class FeeBreakdown(Base):
     __tablename__ = "fee_breakdowns"
@@ -137,3 +145,35 @@ class Notice(Base):
     is_new = Column(Boolean, default=False)
     pdf_link = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=utc_now)
+
+class ApplicationRevision(Base):
+    __tablename__ = "application_revisions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    application_id = Column(Integer, ForeignKey("applications.id"), nullable=False, index=True)
+    revision_number = Column(Integer, default=1)
+    snapshot_json = Column(Text, nullable=False)
+    changed_by = Column(String(100), default="applicant")
+    change_type = Column(String(50), default="UPDATE") # INITIAL_SUBMISSION, CORRECTION_REQUEST, RESUBMISSION, ADMIN_APPROVAL, ADMIN_REOPEN
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utc_now)
+
+    application = relationship("Application", back_populates="revisions")
+
+class ConvocationCard(Base):
+    __tablename__ = "convocation_cards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    card_id = Column(String(100), unique=True, index=True, nullable=False) # e.g. IU27-CARD-000101-V1
+    application_id = Column(Integer, ForeignKey("applications.id"), nullable=False, index=True)
+    verification_token = Column(String(128), unique=True, index=True, nullable=False)
+    digital_signature = Column(String(255), nullable=False)
+    status = Column(String(50), default="VALID") # VALID, REVOKED, SUSPENDED
+    version = Column(Integer, default=1)
+    issued_at = Column(DateTime, default=utc_now)
+    revoked_at = Column(DateTime, nullable=True)
+    revocation_reason = Column(Text, nullable=True)
+    metadata_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utc_now)
+
+    application = relationship("Application", back_populates="convocation_cards")

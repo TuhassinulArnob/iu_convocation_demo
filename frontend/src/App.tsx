@@ -17,6 +17,7 @@ import { StudentDashboardPage } from './pages/StudentDashboardPage';
 import { PaymentPortalPage } from './pages/PaymentPortalPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
+import { VerifyCardPage } from './pages/VerifyCardPage';
 
 export const App: React.FC = () => {
   return (
@@ -33,6 +34,10 @@ export const App: React.FC = () => {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/track-application" element={<TrackApplicationPage />} />
             
+            {/* Public Card Verification */}
+            <Route path="/verify/:cardId" element={<VerifyCardPage />} />
+            <Route path="/verify" element={<VerifyCardPage />} />
+
             {/* Auth */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterWizardPage />} />

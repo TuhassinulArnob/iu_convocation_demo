@@ -1,5 +1,6 @@
 import io
 import csv
+import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlalchemy.orm import Session
@@ -9,11 +10,40 @@ from app.core.database import get_db
 from app.core.deps import get_current_admin
 from app.models.models import (
     User, Application, Department, FeeBreakdown, 
-    PaymentSimulation, Notice, ApplicationStatusHistory
+    PaymentSimulation, Notice, ApplicationStatusHistory,
+    ApplicationRevision, ConvocationCard
 )
 from app.schemas.schemas import AdminStatusChangeRequest, NoticeCreate, NoticeUpdate
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
+
+def create_application_snapshot(app: Application) -> str:
+    data = {
+        "app_id": app.app_id,
+        "full_name": app.full_name,
+        "father_name": app.father_name,
+        "mother_name": app.mother_name,
+        "date_of_birth": app.date_of_birth,
+        "gender": app.gender,
+        "mobile": app.mobile,
+        "email": app.email,
+        "present_address": app.present_address,
+        "permanent_address": app.permanent_address,
+        "department_id": app.department_id,
+        "degree_level": app.degree_level,
+        "registration_category": app.registration_category,
+        "admission_session": app.admission_session,
+        "roll_number": app.roll_number,
+        "registration_number": app.registration_number,
+        "gown_size": app.gown_size,
+        "guest_count": app.guest_count,
+        "guest_details": app.guest_details_json,
+        "original_certificate_held": app.original_certificate_held,
+        "degrees": app.degrees_json,
+        "photo_url": app.photo_url,
+        "status": app.status,
+    }
+    return json.dumps(data)
 
 @router.get("/stats")
 def get_admin_stats(
@@ -240,6 +270,35 @@ def get_application_detail(
         for h in sorted(app.status_history, key=lambda x: x.id)
     ]
 
+    cards = [
+        {
+            "card_id": c.card_id,
+            "status": c.status,
+            "version": c.version,
+            "issued_at": c.issued_at.strftime("%d %b %Y, %I:%M %p") if c.issued_at else "N/A",
+            "revoked_at": c.revoked_at.strftime("%d %b %Y, %I:%M %p") if c.revoked_at else None,
+            "revocation_reason": c.revocation_reason,
+            "digital_signature": c.digital_signature
+        }
+        for c in sorted(app.convocation_cards, key=lambda x: x.id, reverse=True)
+    ]
+
+    revisions = [
+        {
+            "revision_number": r.revision_number,
+            "change_type": r.change_type,
+            "changed_by": r.changed_by,
+            "notes": r.notes,
+            "created_at": r.created_at.strftime("%d %b %Y, %I:%M %p") if r.created_at else "N/A"
+        }
+        for r in sorted(app.revisions, key=lambda x: x.id)
+    ]
+
+    try:
+        corr_cats = json.loads(app.correction_categories or "[]")
+    except Exception:
+        corr_cats = []
+
     return {
         "id": app.id,
         "app_id": app.app_id,
@@ -270,6 +329,10 @@ def get_application_detail(
         "photo_url": app.photo_url,
         "status": app.status,
         "review_note": app.review_note,
+        "correction_instructions": app.correction_instructions,
+        "correction_categories": corr_cats,
+        "correction_requested_at": app.correction_requested_at.strftime("%d %b %Y, %I:%M %p") if app.correction_requested_at else None,
+        "resubmitted_at": app.resubmitted_at.strftime("%d %b %Y, %I:%M %p") if app.resubmitted_at else None,
         "payment_status": "DEMO SUCCESS" if has_paid else ("PAYMENT_DUE" if (app.status in ["APPROVED", "Approved", "Approved (Demo)"]) else "NOT_AVAILABLE"),
         "payment_unlocked": (app.status in ["APPROVED", "Approved", "Approved (Demo)"] and not has_paid),
         "fee_breakdown": {
@@ -280,6 +343,8 @@ def get_application_detail(
             "total_payable": fee.total_payable if fee else 4532.50
         },
         "payments": payments,
+        "cards": cards,
+        "revisions": revisions,
         "status_history": history,
         "created_at": app.created_at.strftime("%d %b %Y, %I:%M %p")
     }
@@ -305,13 +370,13 @@ def update_application_status(
     
     if raw_status in ["Submitted", "Under Review", "Approved (Demo)", "Rejected (Demo)", "Correction Required", "PENDING_REVIEW", "APPROVED", "REJECTED", "CORRECTION_REQUIRED", "Approved", "Rejected"]:
         canonical_status = raw_status
+    elif "correct" in status_lower:
+        canonical_status = "CORRECTION_REQUIRED"
     elif "approve" in status_lower:
         canonical_status = "APPROVED"
     elif "reject" in status_lower:
         canonical_status = "REJECTED"
-    elif "correction" in status_lower:
-        canonical_status = "CORRECTION_REQUIRED"
-    elif "review" in status_lower or "pending" in status_lower:
+    elif "review" in status_lower or "pending" in status_lower or "submit" in status_lower:
         canonical_status = "PENDING_REVIEW"
     else:
         raise HTTPException(status_code=400, detail=f"Invalid status: {raw_status}")
@@ -321,19 +386,74 @@ def update_application_status(
     if req.review_note:
         app.review_note = req.review_note
 
+    # Calculate revision count
+    rev_count = db.query(ApplicationRevision).filter(ApplicationRevision.application_id == app.id).count()
+
+    # 1. Handling Correction Request
+    if canonical_status in ["CORRECTION_REQUIRED", "Correction Required"] or "correct" in canonical_status.lower():
+        instructions = req.correction_instructions or req.review_note or "Correction requested by administrator."
+        categories = req.correction_categories or []
+        app.correction_instructions = instructions
+        app.correction_categories = json.dumps(categories)
+        app.correction_requested_at = datetime.now(timezone.utc)
+
+        # Rule 5: If an approved application is reopened for correction, invalidate or suspend the previously issued card until approved again
+        was_approved = prev_status in ["APPROVED", "Approved", "Approved (Demo)"]
+        if was_approved:
+            active_cards = db.query(ConvocationCard).filter(
+                ConvocationCard.application_id == app.id,
+                ConvocationCard.status == "VALID"
+            ).all()
+            for card in active_cards:
+                card.status = "REVOKED"
+                card.revoked_at = datetime.now(timezone.utc)
+                card.revocation_reason = f"Application reopened for correction by admin: {instructions}"
+
+            reopen_rev = ApplicationRevision(
+                application_id=app.id,
+                revision_number=rev_count + 1,
+                snapshot_json=create_application_snapshot(app),
+                changed_by=admin.email or "Admin",
+                change_type="ADMIN_REOPEN",
+                notes=f"Approved application reopened for correction. Active convocation cards revoked. Instructions: {instructions}"
+            )
+            db.add(reopen_rev)
+        else:
+            corr_rev = ApplicationRevision(
+                application_id=app.id,
+                revision_number=rev_count + 1,
+                snapshot_json=create_application_snapshot(app),
+                changed_by=admin.email or "Admin",
+                change_type="CORRECTION_REQUEST",
+                notes=f"Correction requested with categories: {', '.join(categories) if categories else 'General'}. Instructions: {instructions}"
+            )
+            db.add(corr_rev)
+
+    # 2. Handling Approval
+    elif canonical_status in ["APPROVED", "Approved", "Approved (Demo)"]:
+        app_rev = ApplicationRevision(
+            application_id=app.id,
+            revision_number=rev_count + 1,
+            snapshot_json=create_application_snapshot(app),
+            changed_by=admin.email or "Admin",
+            change_type="ADMIN_APPROVAL",
+            notes=req.review_note or "Application verified and approved by Convocation Committee."
+        )
+        db.add(app_rev)
+
     # Record history
     history = ApplicationStatusHistory(
         application_id=app.id,
         previous_status=prev_status,
         new_status=canonical_status,
         admin_identifier=admin.email or "Admin",
-        review_note=req.review_note or f"Status transitioned to {canonical_status} by Administrative Review."
+        review_note=req.review_note or req.correction_instructions or f"Status transitioned to {canonical_status} by Administrative Review."
     )
     db.add(history)
     db.commit()
 
     has_paid = any(p.status == "DEMO SUCCESS" for p in app.payments)
-    payment_status = "DEMO SUCCESS" if has_paid else ("PAYMENT_DUE" if canonical_status == "APPROVED" else "NOT_AVAILABLE")
+    payment_status = "DEMO SUCCESS" if has_paid else ("PAYMENT_DUE" if canonical_status in ["APPROVED", "Approved", "Approved (Demo)"] else "NOT_AVAILABLE")
 
     return {
         "message": f"Application status successfully changed to {canonical_status}",
@@ -341,7 +461,9 @@ def update_application_status(
         "previous_status": prev_status,
         "new_status": canonical_status,
         "payment_status": payment_status,
-        "payment_unlocked": (canonical_status == "APPROVED" and not has_paid)
+        "payment_unlocked": (canonical_status in ["APPROVED", "Approved", "Approved (Demo)"] and not has_paid),
+        "correction_instructions": app.correction_instructions,
+        "correction_categories": req.correction_categories or []
     }
 
 # Notice Management

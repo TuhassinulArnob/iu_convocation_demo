@@ -4,15 +4,28 @@ import { isSupabaseConfigured, uploadToSupabaseStorage } from './supabase';
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 export function getAuthToken(): string | null {
-  // Check session storage first (for manual admin sessions), then persistent local storage for students
+  // If accessing student-specific pages (/dashboard, /payment), prioritize student credentials
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.startsWith('/dashboard') || path.startsWith('/payment')) {
+      return localStorage.getItem('iu_convocation_token') || sessionStorage.getItem('iu_convocation_admin_token');
+    }
+    if (path.startsWith('/admin')) {
+      return sessionStorage.getItem('iu_convocation_admin_token') || localStorage.getItem('iu_convocation_token');
+    }
+  }
   return sessionStorage.getItem('iu_convocation_admin_token') || localStorage.getItem('iu_convocation_token');
 }
 
 export function setAuthToken(token: string, isAdmin: boolean = false): void {
   if (isAdmin) {
     sessionStorage.setItem('iu_convocation_admin_token', token);
+    localStorage.removeItem('iu_convocation_token');
+    localStorage.removeItem('iu_convocation_user');
   } else {
     localStorage.setItem('iu_convocation_token', token);
+    sessionStorage.removeItem('iu_convocation_admin_token');
+    sessionStorage.removeItem('iu_convocation_admin_user');
   }
 }
 
@@ -24,6 +37,20 @@ export function clearAuthToken(): void {
 }
 
 export function getCurrentUser(): any | null {
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname;
+    if (path.startsWith('/dashboard') || path.startsWith('/payment')) {
+      const studentData = localStorage.getItem('iu_convocation_user');
+      if (studentData) {
+        try {
+          return JSON.parse(studentData);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
   const adminData = sessionStorage.getItem('iu_convocation_admin_user');
   if (adminData) {
     try {
@@ -45,8 +72,10 @@ export function getCurrentUser(): any | null {
 export function setCurrentUser(user: any, isAdmin: boolean = false): void {
   if (isAdmin || user?.role === 'admin') {
     sessionStorage.setItem('iu_convocation_admin_user', JSON.stringify(user));
+    localStorage.removeItem('iu_convocation_user');
   } else {
     localStorage.setItem('iu_convocation_user', JSON.stringify(user));
+    sessionStorage.removeItem('iu_convocation_admin_user');
   }
 }
 
@@ -133,7 +162,15 @@ export const api = {
   submitMyApplication: () => request<any>('/applications/my/submit', {
     method: 'POST',
   }),
+  resubmitMyApplication: () => request<any>('/applications/my/resubmit', {
+    method: 'POST',
+  }),
   getMyConvocationCard: () => request<any>('/applications/my/card'),
+  getConvocationCardPdfUrl: () => `${API_BASE}/applications/my/card/pdf`,
+  verifyCard: (cardId: string, token?: string) => {
+    const q = token ? `?token=${encodeURIComponent(token)}` : '';
+    return request<any>(`/verify/${encodeURIComponent(cardId)}${q}`);
+  },
 
   // Payments
   initiatePayment: (method: string) => request<any>('/payments/initiate', {
@@ -230,9 +267,20 @@ export const api = {
     return request<any>(`/admin/applications?${q.toString()}`);
   },
   getAdminApplicationDetail: (idOrAppId: string) => request<any>(`/admin/applications/${idOrAppId}`),
-  updateAdminApplicationStatus: (appId: string, newStatus: string, reviewNote?: string) => request<any>(`/admin/applications/${appId}/status`, {
+  updateAdminApplicationStatus: (
+    appId: string, 
+    newStatus: string, 
+    reviewNote?: string,
+    correctionInstructions?: string,
+    correctionCategories?: string[]
+  ) => request<any>(`/admin/applications/${appId}/status`, {
     method: 'PUT',
-    body: JSON.stringify({ new_status: newStatus, review_note: reviewNote }),
+    body: JSON.stringify({ 
+      new_status: newStatus, 
+      review_note: reviewNote,
+      correction_instructions: correctionInstructions,
+      correction_categories: correctionCategories
+    }),
   }),
   createNotice: (data: any) => request<any>('/admin/notices', {
     method: 'POST',

@@ -1,5 +1,8 @@
 import bcrypt
 import jwt
+import hmac
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from app.core.config import settings
@@ -33,3 +36,25 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return payload
     except Exception:
         return None
+
+def generate_card_verification_token() -> str:
+    """Generate a cryptographically secure random verification token for convocation card."""
+    return secrets.token_urlsafe(32)
+
+def generate_card_signature(card_id: str, app_id: str, roll_number: str, issued_at_val: Any) -> str:
+    """Generate server-side cryptographic HMAC-SHA256 signature for educational demo card."""
+    if isinstance(issued_at_val, datetime):
+        time_str = issued_at_val.strftime("%Y-%m-%dT%H:%M:%S")
+    else:
+        # Strip microsecond and timezone if string
+        time_str = str(issued_at_val).split(".")[0].replace("Z", "").replace("+00:00", "")
+        
+    message = f"IU2027:{card_id.strip()}:{app_id.strip()}:{str(roll_number).strip()}:{time_str.strip()}".encode("utf-8")
+    key = settings.SECRET_KEY.encode("utf-8")
+    sig = hmac.new(key, message, hashlib.sha256).hexdigest()
+    return f"IU27-EDUSIG-{sig[:32].upper()}"
+
+def verify_card_signature(card_id: str, app_id: str, roll_number: str, issued_at_val: Any, signature: str) -> bool:
+    """Validate server-side cryptographic signature."""
+    expected = generate_card_signature(card_id, app_id, roll_number, issued_at_val)
+    return hmac.compare_digest(expected, signature)

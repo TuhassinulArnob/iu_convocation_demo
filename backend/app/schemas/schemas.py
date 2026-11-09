@@ -134,6 +134,57 @@ class PaymentSimulateRequest(BaseModel):
 class AdminStatusChangeRequest(BaseModel):
     new_status: str # "Under Review", "Approved (Demo)", "Rejected (Demo)", "Correction Required", "Submitted"
     review_note: Optional[str] = None
+    correction_instructions: Optional[str] = None
+    correction_categories: Optional[List[str]] = None
+
+# --- Verification & Card ---
+class PublicVerifyCardResponse(BaseModel):
+    valid: bool
+    status: str # "VALID", "REVOKED", "INVALID"
+    status_label: str # "Valid Demo Card", "Invalid / Revoked", "Invalid"
+    candidate_name: Optional[str] = None
+    card_id: Optional[str] = None
+    degree_level: Optional[str] = None
+    department: Optional[str] = None
+    convocation_year: str = "2027 (5th Convocation)"
+    issued_at: Optional[str] = None
+    revoked_at: Optional[str] = None
+    revocation_reason: Optional[str] = None
+    payment_confirmation_status: Optional[str] = None
+    digital_signature_verification: str # "Valid", "Invalid"
+    digital_signature: Optional[str] = None
+    disclaimer: str = "Digitally Verified — Educational Demonstration"
+    verification_message: str
+
+class ConvocationCardResponse(BaseModel):
+    event_name: str = "5th Convocation 2027"
+    bangla_event_name: str = "৫ম সমাবর্তন ২০২৭"
+    institution: str = "Islamic University Bangladesh"
+    location: str = "Kushtia, Bangladesh"
+    ceremony_date: str = "Tuesday, 02 February 2027"
+    ceremony_time: str = "09:00 AM BST"
+    venue: str = "Central Playground, Islamic University Campus, Kushtia"
+    app_id: str
+    card_id: str
+    verification_token: str
+    verification_url: str
+    digital_signature: str
+    digital_signature_indicator: str = "Digitally Verified — Educational Demonstration"
+    issued_at: str
+    student_name: str
+    department: str
+    faculty: str
+    degree: str
+    roll_number: str
+    registration_number: Optional[str] = None
+    session: str
+    gown_size: str
+    guest_count: int
+    guests: List[Any] = []
+    photo_url: Optional[str] = None
+    watermark: str = "UNOFFICIAL DEMONSTRATION CARD — NOT VALID FOR UNIVERSITY ENTRY."
+    version: int = 1
+    status: str = "VALID"
 
 # --- Notice ---
 class NoticeCreate(BaseModel):

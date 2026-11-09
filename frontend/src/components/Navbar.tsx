@@ -60,14 +60,24 @@ export const Navbar: React.FC = () => {
             DEMO WEBSITE — For educational and testing purposes only. No real registration or payment is processed.
           </span>
         </div>
-        <Link
-          to="/track-application"
-          className="hidden sm:inline-flex items-center gap-1 font-bold text-stone-900 bg-amber-500/70 hover:bg-amber-500 px-2.5 py-0.5 rounded-full text-[11px] transition shrink-0"
-          title="Track an existing application"
-        >
-          <Search className="w-3 h-3" />
-          <span>Track Application</span>
-        </Link>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Link
+            to="/track-application"
+            className="hidden sm:inline-flex items-center gap-1 font-bold text-stone-900 bg-amber-500/70 hover:bg-amber-500 px-2.5 py-0.5 rounded-full text-[11px] transition shrink-0"
+            title="Track an existing application"
+          >
+            <Search className="w-3 h-3" />
+            <span>Track Application</span>
+          </Link>
+          <Link
+            to="/verify"
+            className="hidden sm:inline-flex items-center gap-1 font-bold text-stone-900 bg-amber-500/70 hover:bg-amber-500 px-2.5 py-0.5 rounded-full text-[11px] transition shrink-0"
+            title="Verify Convocation Card via QR Code"
+          >
+            <ShieldCheck className="w-3 h-3" />
+            <span>Verify Card</span>
+          </Link>
+        </div>
       </div>
 
       {/* Main Navbar Row (Refined height 78-84px) */}
@@ -224,6 +234,21 @@ export const Navbar: React.FC = () => {
               <span>Track Application</span>
             </div>
             <ChevronRight className="w-4 h-4 text-amber-600" />
+          </Link>
+
+          <Link
+            to="/verify"
+            className={`flex items-center justify-between py-2.5 px-3 rounded-xl text-sm font-semibold transition ${
+              isActive('/verify')
+                ? 'bg-amber-100 text-stone-900 font-bold'
+                : 'text-stone-700 hover:bg-stone-100'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-teal-deep" />
+              <span>Verify Card (QR)</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-stone-400" />
           </Link>
 
           {/* Auth section in mobile drawer */}

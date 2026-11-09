@@ -60,6 +60,9 @@ app.include_router(payments.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(upload.router, prefix="/api")
 
+# Direct alias for public QR card verification: /api/verify/{card_id}
+app.add_api_route("/api/verify/{card_id}", applications.verify_card_public, methods=["GET"], tags=["Verification"])
+
 @app.get("/")
 def root():
     return {

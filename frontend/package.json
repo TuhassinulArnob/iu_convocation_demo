@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
+    "@types/qrcode.react": "^1.0.5",
     "autoprefixer": "^10.6.2",
     "lucide-react": "^1.70.0",
     "postcss": "^8.5.32",
+    "qrcode.react": "^4.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",

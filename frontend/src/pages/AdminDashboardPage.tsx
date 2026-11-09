@@ -51,6 +51,15 @@ export const AdminDashboardPage: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
   const [correctionNote, setCorrectionNote] = useState('');
+  const [selectedCorrectionCategories, setSelectedCorrectionCategories] = useState<string[]>([]);
+
+  const correctionCategoryOptions = [
+    'Passport Photo',
+    'Name / Personal Information',
+    'Department / Degree Information',
+    'Guest Information',
+    'Other Documents'
+  ];
 
   const quickRejectionReasons = [
     'Academic credentials could not be verified',
@@ -60,9 +69,11 @@ export const AdminDashboardPage: React.FC = () => {
   ];
 
   const quickCorrectionNotes = [
-    'Photo blurry or invalid, please re-upload a clear passport photo',
-    'Incorrect exam year or session entered, please verify',
-    'Gown size not selected properly',
+    'Photo blurry or invalid, please re-upload a clear passport photo with white background',
+    'Personal name does not match academic records, please verify',
+    'Incorrect exam year or session entered, please update degree information',
+    'Guest information incomplete, please provide details or adjust count',
+    'Please verify and update registration/roll details'
   ];
 
   // Notices Tab State
@@ -203,20 +214,33 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   // 8. Execute Application Status Decision (Approve, Reject, Request Correction, Keep Under Review)
-  const handleExecuteStatusChange = async (targetStatus: string, note: string) => {
+  const handleExecuteStatusChange = async (
+    targetStatus: string, 
+    note: string,
+    correctionInstructions?: string,
+    correctionCategories?: string[]
+  ) => {
     if (!selectedApp) return;
 
     setUpdatingStatus(true);
     setStatusSuccessMessage(null);
 
     try {
-      await api.updateAdminApplicationStatus(selectedApp.app_id, targetStatus, note);
+      await api.updateAdminApplicationStatus(
+        selectedApp.app_id, 
+        targetStatus, 
+        note,
+        correctionInstructions,
+        correctionCategories
+      );
       
       // Update local modal record
       setSelectedApp((prev: any) => ({
         ...prev,
         status: targetStatus,
         review_note: note,
+        correction_instructions: correctionInstructions || prev.correction_instructions,
+        correction_categories: correctionCategories || prev.correction_categories,
         status_history: [
           ...(prev.status_history || []),
           {
@@ -976,19 +1000,36 @@ export const AdminDashboardPage: React.FC = () => {
                         <span>Reject Application</span>
                       </button>
 
-                      {/* Button 3: Request Correction */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCorrectionNote('');
-                          setCorrectionModalOpen(true);
-                        }}
-                        disabled={updatingStatus}
-                        className="px-4 py-3 border-2 border-amber-500 text-amber-700 hover:bg-amber-50 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                        <span>Request Correction</span>
-                      </button>
+                      {/* Button 3: Request Correction / Reopen */}
+                      {selectedApp.status === 'Approved' || selectedApp.status === 'Approved (Demo)' || selectedApp.status === 'APPROVED' ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCorrectionNote(selectedApp.correction_instructions || '');
+                            setSelectedCorrectionCategories(selectedApp.correction_categories || []);
+                            setCorrectionModalOpen(true);
+                          }}
+                          disabled={updatingStatus}
+                          className="px-4 py-3 border-2 border-amber-600 text-amber-800 bg-amber-50/60 hover:bg-amber-100 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <RotateCcw className="w-4 h-4 text-amber-700" />
+                          <span>Reopen for Correction</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCorrectionNote(selectedApp.correction_instructions || '');
+                            setSelectedCorrectionCategories(selectedApp.correction_categories || []);
+                            setCorrectionModalOpen(true);
+                          }}
+                          disabled={updatingStatus}
+                          className="px-4 py-3 border-2 border-amber-500 text-amber-700 hover:bg-amber-50 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                          <span>Request Correction</span>
+                        </button>
+                      )}
 
                       {/* Button 4: Keep Under Review */}
                       <button
@@ -1170,40 +1211,104 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-bold text-amber-950">
-                  Request Correction — {selectedApp.app_id}
+                  {selectedApp.status === 'Approved' || selectedApp.status === 'Approved (Demo)' || selectedApp.status === 'APPROVED'
+                    ? 'Reopen & Request Correction'
+                    : 'Request Correction'
+                  } — {selectedApp.app_id}
                 </h3>
                 <p className="text-xs text-stone-500">Candidate: {selectedApp.full_name}</p>
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* Reopening Warning Banner if application was already approved */}
+            {(selectedApp.status === 'Approved' || selectedApp.status === 'Approved (Demo)' || selectedApp.status === 'APPROVED') && (
+              <div className="p-3 bg-amber-50 border border-amber-300 rounded-2xl text-amber-950 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-amber-900">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Reopening Approved Application</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-900">
+                  Reopening this application will immediately <strong>invalidate and revoke any previously issued convocation entry card</strong>. 
+                  Student dashboard editing access will be restored until they resubmit and the application is re-approved.
+                </p>
+              </div>
+            )}
+
+            {/* Selectable Correction Categories */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-stone-700">
+                Selectable Correction Categories <span className="text-stone-400 font-normal">(select all that apply)</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {correctionCategoryOptions.map((cat) => {
+                  const isChecked = selectedCorrectionCategories.includes(cat);
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        if (isChecked) {
+                          setSelectedCorrectionCategories(selectedCorrectionCategories.filter(c => c !== cat));
+                        } else {
+                          setSelectedCorrectionCategories([...selectedCorrectionCategories, cat]);
+                        }
+                      }}
+                      className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-semibold border transition text-left ${
+                        isChecked 
+                          ? 'bg-amber-100/70 border-amber-500 text-amber-950 shadow-xs' 
+                          : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
+                      }`}
+                    >
+                      <span>{cat}</span>
+                      <span className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                        isChecked ? 'bg-amber-600 text-white' : 'border border-stone-300 bg-white'
+                      }`}>
+                        {isChecked ? '✓' : ''}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quick Correction Presets */}
+            <div className="space-y-1.5">
               <label className="block text-xs font-bold text-stone-700">Quick Correction Presets</label>
               <div className="flex flex-wrap gap-1.5">
                 {quickCorrectionNotes.map((chip, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setCorrectionNote(chip)}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium transition"
+                    onClick={() => {
+                      if (!correctionNote.includes(chip)) {
+                        setCorrectionNote(prev => prev ? `${prev}\n${chip}` : chip);
+                      }
+                    }}
+                    className="text-[10.5px] px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium transition"
                   >
-                    + {chip}
+                    + {chip.length > 40 ? `${chip.slice(0, 40)}...` : chip}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Specific Correction Instructions Text Area */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-stone-700">
-                Correction Instructions <span className="text-stone-400 font-normal">(visible to candidate)</span>
+                Specific Correction Instructions <span className="text-stone-400 font-normal">(visible to candidate on dashboard)</span>
               </label>
               <textarea
                 rows={3}
                 value={correctionNote}
-                maxLength={500}
+                maxLength={600}
                 onChange={(e) => setCorrectionNote(e.target.value)}
-                placeholder="Explain what the candidate needs to rectify..."
-                className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder="Write specific instructions detailing what information or documents the candidate must correct..."
+                className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 leading-relaxed"
               />
+              <div className="flex justify-between text-[11px] text-stone-400">
+                <span>{correctionNote.trim().length === 0 ? 'Instructions are required' : '✓ Instructions ready'}</span>
+                <span>{correctionNote.length}/600 chars</span>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2.5 pt-2 border-t border-stone-100">
@@ -1218,10 +1323,11 @@ export const AdminDashboardPage: React.FC = () => {
               <button
                 type="button"
                 disabled={!correctionNote.trim() || updatingStatus}
-                onClick={() => handleExecuteStatusChange('CORRECTION_REQUIRED', correctionNote.trim())}
-                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow transition disabled:opacity-50"
+                onClick={() => handleExecuteStatusChange('CORRECTION_REQUIRED', correctionNote.trim(), correctionNote.trim(), selectedCorrectionCategories)}
+                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow transition disabled:opacity-50 flex items-center gap-1.5"
               >
-                {updatingStatus ? 'Sending...' : 'Send Correction Request'}
+                <Edit3 className="w-4 h-4" />
+                <span>{updatingStatus ? 'Saving to Database...' : 'Request Correction & Enable Editing'}</span>
               </button>
             </div>
           </div>

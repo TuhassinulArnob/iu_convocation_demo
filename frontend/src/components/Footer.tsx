@@ -97,6 +97,11 @@ export const Footer: React.FC = () => {
                   Track Application
                 </Link>
               </li>
+              <li>
+                <Link to="/verify" className="hover:text-[#F3A052] transition font-medium text-amber-200">
+                  Verify Card (QR)
+                </Link>
+              </li>
             </ul>
           </div>
 
