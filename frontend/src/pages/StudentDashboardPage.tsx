@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   User, GraduationCap, CreditCard, Award, Printer, 
-  Download, Clock, CheckCircle, AlertTriangle, FileText, 
-  ExternalLink, Sparkles, RefreshCw, X 
+  Download, Clock, CheckCircle, CheckCircle2, AlertTriangle, FileText, 
+  ExternalLink, Sparkles, RefreshCw, X, Lock, AlertCircle 
 } from 'lucide-react';
 import { api, getAuthToken, clearAuthToken } from '../services/api';
 import { PaymentModal } from '../components/PaymentModal';
@@ -78,8 +78,11 @@ export const StudentDashboardPage: React.FC = () => {
     );
   }
 
-  const isApproved = appData.status === 'Approved (Demo)';
-  const hasPaid = appData.has_paid;
+  const isApproved = Boolean(appData.is_approved ?? (appData.status === 'Approved' || appData.status === 'Approved (Demo)'));
+  const hasPaid = Boolean(appData.has_paid);
+  const isRejected = Boolean(appData.status?.toLowerCase().includes('reject'));
+  const isPending = !isApproved && !isRejected;
+  const canPay = Boolean(appData.can_pay ?? (isApproved && !hasPaid));
 
   return (
     <div className="min-h-screen bg-iu-bg pb-20">
@@ -100,7 +103,7 @@ export const StudentDashboardPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {isApproved && (
+            {isApproved && hasPaid && (
               <button
                 onClick={handleOpenConvocationCard}
                 className="px-4 py-2 bg-gold-warm hover:bg-gold-hover text-stone-900 font-bold rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition"
@@ -110,7 +113,7 @@ export const StudentDashboardPage: React.FC = () => {
               </button>
             )}
             <Link
-              to={`/track-application`}
+              to={`/track-application?app_id=${appData.app_id}`}
               className="px-4 py-2 border border-white/30 text-white rounded-xl text-xs sm:text-sm hover:bg-white/10 transition"
             >
               Public Tracking
@@ -126,41 +129,116 @@ export const StudentDashboardPage: React.FC = () => {
           {/* Left Column (8 cols) */}
           <div className="lg:col-span-8 space-y-6">
             
-            {/* Status & Highlights Card */}
-            <div className="bg-white rounded-2xl border border-iu-border shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-xs uppercase font-bold text-stone-400 tracking-wider">Current Status</span>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wide border ${
-                    isApproved
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : appData.status.includes('Rejected')
-                      ? 'bg-rose-100 text-rose-800 border-rose-300'
-                      : 'bg-amber-100 text-amber-900 border-amber-300'
-                  }`}>
-                    {appData.status}
+            {/* 1. Status Banner according to Official Workflow */}
+            {hasPaid ? (
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-6 shadow-sm space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wide border border-emerald-300 w-fit">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Registration Complete
                   </span>
-                  <span className={`text-xs font-bold ${hasPaid ? 'text-emerald-700' : 'text-amber-700'}`}>
-                    • {hasPaid ? 'Demo Payment Completed' : 'Awaiting Payment'}
+                  <span className="text-xs font-bold text-emerald-800">Demo Payment Verified</span>
+                </div>
+                <h3 className="text-lg font-bold text-emerald-950">
+                  Payment received. Your convocation registration is confirmed.
+                </h3>
+                <p className="text-xs sm:text-sm text-emerald-900 leading-relaxed">
+                  Your seat and ceremony attendance credentials are confirmed. You can now download or print your official Convocation Card and keep your payment receipt for records.
+                </p>
+                <div className="pt-2 flex flex-wrap gap-3">
+                  <button
+                    onClick={handleOpenConvocationCard}
+                    className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow flex items-center gap-2 transition"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>Download / Print Convocation Card</span>
+                  </button>
+                  {appData.payments && appData.payments.length > 0 && (
+                    <button
+                      onClick={() => handleOpenReceipt(appData.payments[0].reference_id)}
+                      className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 font-bold rounded-xl text-xs sm:text-sm shadow-sm flex items-center gap-2 transition"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download Payment Receipt</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : isRejected ? (
+              <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-6 shadow-sm space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-extrabold uppercase tracking-wide border border-rose-300">
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    Application Rejected
                   </span>
                 </div>
-                {appData.review_note && (
-                  <p className="text-xs text-stone-600 mt-2 bg-stone-50 p-2.5 rounded-lg border border-stone-200">
-                    <strong>Review Note:</strong> {appData.review_note}
-                  </p>
-                )}
+                <h3 className="text-lg font-bold text-rose-950">
+                  Application Verification Unsuccessful
+                </h3>
+                <p className="text-xs sm:text-sm text-rose-900 leading-relaxed">
+                  {appData.review_note 
+                    ? `Reason: ${appData.review_note}`
+                    : "Your application could not be verified against the university graduation registry. Please review your details or contact the convocation helpdesk."}
+                </p>
+                <div className="p-3 bg-white rounded-xl border border-rose-200 text-xs text-rose-700 font-medium flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span>Payment is not available for rejected applications.</span>
+                </div>
               </div>
-
-              {!hasPaid && (
-                <Link
-                  to="/payment"
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow transition flex items-center justify-center gap-2 shrink-0"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Proceed to Payment Portal</span>
-                </Link>
-              )}
-            </div>
+            ) : isApproved ? (
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-6 shadow-sm space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wide border border-emerald-300 w-fit">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Application Approved
+                  </span>
+                  <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                    Payment Due
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-emerald-950">
+                  Congratulations! Your convocation application has been approved.
+                </h3>
+                <p className="text-xs sm:text-sm text-emerald-900 leading-relaxed">
+                  The Convocation Committee has verified your academic credentials. Please proceed to payment to confirm your ceremony registration and gown allocation.
+                </p>
+                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs text-stone-500 block">Total Amount Payable</span>
+                    <span className="text-xl font-black text-teal-dark font-mono">
+                      {appData.fee_breakdown?.formatted_total || '৳ 4,532.50'}
+                    </span>
+                    <span className="text-[11px] text-stone-500 block mt-0.5">Registration Deadline: 25 November 2026</span>
+                  </div>
+                  <Link
+                    to="/payment"
+                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2 shrink-0"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay Now (Simulate Gateway)</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 shadow-sm space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-extrabold uppercase tracking-wide border border-amber-300">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    Application Under Review
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-amber-950">
+                  Verification in Progress
+                </h3>
+                <p className="text-xs sm:text-sm text-amber-900 leading-relaxed">
+                  Your application has been submitted and is currently being reviewed by the Convocation Committee. You will be able to proceed with payment once your application is approved.
+                </p>
+                <div className="p-3.5 bg-stone-100 border border-stone-200 rounded-xl text-xs text-stone-600 flex items-center gap-2.5">
+                  <Lock className="w-4 h-4 text-stone-400 shrink-0" />
+                  <span><strong>Payment Locked:</strong> Payment will be enabled after your application is approved by university staff.</span>
+                </div>
+              </div>
+            )}
 
             {/* Academic & Personal Profile Card */}
             <div className="bg-white rounded-2xl border border-iu-border shadow-sm p-6 space-y-6">
@@ -339,16 +417,25 @@ export const StudentDashboardPage: React.FC = () => {
                 <span>Ceremony Convocation Card</span>
               </div>
               <p className="text-xs text-stone-200 leading-relaxed">
-                {isApproved
-                  ? "Your application is approved for demonstration! You can now view and print your Convocation Card."
-                  : "Convocation card is activated after departmental demonstration approval. (Admins can approve this in the Admin Panel)."}
+                {isApproved && hasPaid
+                  ? "Your application is approved and fee paid! You can now view and print your official Convocation Entry Card."
+                  : isApproved && !hasPaid
+                  ? "Application approved! Complete your registration fee payment to unlock and generate your official Convocation Card."
+                  : "Convocation card is issued after university staff approval and confirmed fee payment."}
               </p>
               <button
                 onClick={handleOpenConvocationCard}
-                disabled={!isApproved}
-                className="w-full py-2.5 px-4 bg-gold-warm hover:bg-gold-hover text-stone-900 font-bold rounded-xl text-xs transition disabled:opacity-40 disabled:cursor-not-allowed shadow"
+                disabled={!(isApproved && hasPaid)}
+                className="w-full py-2.5 px-4 bg-gold-warm hover:bg-gold-hover text-stone-900 font-bold rounded-xl text-xs transition disabled:opacity-40 disabled:cursor-not-allowed shadow flex items-center justify-center gap-1.5"
               >
-                {isApproved ? 'Open Convocation Card' : 'Pending Demo Approval'}
+                {!(isApproved && hasPaid) && <Lock className="w-3.5 h-3.5" />}
+                <span>
+                  {isApproved && hasPaid
+                    ? 'Open Convocation Card'
+                    : isApproved
+                    ? 'Payment Required to Unlock'
+                    : 'Pending Admin Approval'}
+                </span>
               </button>
             </div>
 

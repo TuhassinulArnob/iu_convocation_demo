@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { 
   CreditCard, ShieldAlert, CheckCircle2, AlertTriangle, 
   ArrowLeft, ArrowRight, Clock, RefreshCw, XCircle, 
-  HelpCircle, CheckCircle, Receipt, ExternalLink, QrCode
+  HelpCircle, CheckCircle, Receipt, ExternalLink, QrCode, Lock 
 } from 'lucide-react';
 import { api, getAuthToken, clearAuthToken } from '../services/api';
 import { PageHero } from '../components/PageHero';
@@ -150,13 +150,63 @@ export const PaymentPortalPage: React.FC = () => {
     );
   }
 
+  const isApproved = Boolean(appData.is_approved ?? (appData.status === 'Approved' || appData.status === 'Approved (Demo)'));
+  const isAlreadyPaid = Boolean(appData.has_paid);
   const fee = appData.fee_breakdown;
-  const isAlreadyPaid = appData.has_paid;
+
+  // APPROVAL GUARD: If not already paid and not approved, display approval required card
+  if (!isAlreadyPaid && !isApproved) {
+    return (
+      <div className="min-h-screen bg-iu-bg pb-20">
+        <PageHero
+          title="Payment Portal"
+          description="Fee payment is available following administrative approval"
+          eyebrow="5TH CONVOCATION 2027"
+        />
+        <div className="max-w-xl mx-auto px-4 pt-10">
+          <div className="bg-white rounded-3xl border border-iu-border shadow-md p-6 sm:p-10 text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
+              <Lock className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <span className="px-3.5 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs uppercase tracking-wide border border-amber-300 inline-block">
+                {appData.status.toLowerCase().includes('reject') ? 'Application Rejected' : 'Application Under Review'}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-teal-dark pt-1">
+                Payment Not Available
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-md mx-auto">
+                {appData.status.toLowerCase().includes('reject')
+                  ? 'Your application was rejected during administrative verification. Fee payment cannot be initiated.'
+                  : 'Your application is currently under review by the Convocation Committee. Fee payment will be enabled on your Student Dashboard once university staff approves your application.'}
+              </p>
+            </div>
+
+            {appData.review_note && (
+              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs text-stone-700 text-left">
+                <strong>Review Note:</strong> {appData.review_note}
+              </div>
+            )}
+
+            <div className="pt-2">
+              <Link
+                to="/dashboard"
+                className="w-full sm:w-auto px-6 py-3 bg-teal-deep hover:bg-teal-hover text-white font-bold rounded-xl text-xs sm:text-sm shadow inline-flex items-center justify-center gap-2 transition"
+              >
+                <span>Return to Student Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-iu-bg pb-20">
+    <div className="min-h-screen bg-iu-bg pb-20 overflow-x-hidden w-full">
       
-      {/* Top Banner matching Original IU Design */}
+      {/* Top Banner */}
       <PageHero
         title={inGateway ? 'Payment Gateway' : 'Fee Payment'}
         description={inGateway 
@@ -165,13 +215,13 @@ export const PaymentPortalPage: React.FC = () => {
         eyebrow="5TH CONVOCATION 2027 · SECURE PAYMENT PORTAL"
       />
 
-      <div className="max-w-5xl mx-auto px-4 pt-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 w-full">
         
         {/* Error Notification */}
         {error && (
           <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs flex items-center gap-3">
             <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
-            <span>{error}</span>
+            <span className="break-words">{error}</span>
           </div>
         )}
 
@@ -197,7 +247,7 @@ export const PaymentPortalPage: React.FC = () => {
             </div>
 
             {/* Receipt Summary Card */}
-            <div className="bg-stone-50 rounded-2xl p-5 border border-stone-200 text-left space-y-3 text-xs sm:text-sm font-mono">
+            <div className="bg-stone-50 rounded-2xl p-5 border border-stone-200 text-left space-y-3 text-xs sm:text-sm font-mono break-words">
               <div className="flex justify-between border-b border-stone-200 pb-2 font-sans font-bold">
                 <span className="text-stone-500">Application ID:</span>
                 <span className="text-teal-dark">{appData.app_id}</span>
@@ -216,8 +266,8 @@ export const PaymentPortalPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 text-left">
-              <strong>Notice:</strong> Your application status has been updated to <strong>Under Review</strong> in the university demonstration database. You can track its progress or view your convocation pass once approved.
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 text-left">
+              <strong>Registration Confirmed:</strong> Your convocation seat and attendance have been secured in the university database.
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -229,7 +279,7 @@ export const PaymentPortalPage: React.FC = () => {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                to={`/track-application`}
+                to={`/track-application?app_id=${appData.app_id}`}
                 className="w-full sm:w-auto px-6 py-3 border border-stone-300 text-stone-700 font-bold rounded-xl text-xs sm:text-sm hover:bg-stone-50 flex items-center justify-center gap-2 transition"
               >
                 <span>Track Application</span>
@@ -241,34 +291,34 @@ export const PaymentPortalPage: React.FC = () => {
           /* ============================================================== */
           /* STAGE 2: DEDICATED PAYMENT DEMONSTRATION GATEWAY PAGE           */
           /* ============================================================== */
-          <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200">
+          <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200 w-full">
             
             {/* Gateway Window */}
-            <div className="bg-white rounded-3xl border-2 border-iu-border shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-3xl border-2 border-iu-border shadow-2xl overflow-hidden w-full">
               
               {/* Gateway Top Bar */}
-              <div className={`p-5 text-white flex items-center justify-between ${
+              <div className={`p-4 sm:p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                 activePayment.payment_method === 'bKash' 
                   ? 'bg-gradient-to-r from-[#D12053] to-[#A0143E]' 
                   : 'bg-gradient-to-r from-[#8C3494] to-[#5C1B63]'
               }`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg shrink-0">
                     {activePayment.payment_method === 'bKash' ? 'bK' : 'RC'}
                   </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-black leading-tight">
-                      {activePayment.payment_method} Merchant Checkout (Demonstration)
+                  <div className="min-w-0">
+                    <h2 className="text-base sm:text-lg font-black leading-tight truncate">
+                      {activePayment.payment_method} Merchant Checkout
                     </h2>
                     <p className="text-[11px] text-white/80">
-                      Islamic University 5th Convocation 2027
+                      IU 5th Convocation 2027 (Demo)
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="text-left sm:text-right shrink-0">
                   <span className="text-[10px] uppercase font-bold text-white/70 block">Total Amount</span>
-                  <span className="text-lg sm:text-2xl font-black text-white">
+                  <span className="text-xl sm:text-2xl font-black text-white">
                     {activePayment.formatted_amount}
                   </span>
                 </div>
@@ -292,8 +342,8 @@ export const PaymentPortalPage: React.FC = () => {
               <div className="p-6 sm:p-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                 
                 {/* Left: Original Local QR Code Display */}
-                <div className="md:col-span-6 flex flex-col items-center justify-center text-center space-y-3">
-                  <div className="p-3 bg-stone-50 border-2 border-stone-200 rounded-2xl shadow-inner max-w-[280px] w-full">
+                <div className="md:col-span-6 flex flex-col items-center justify-center text-center space-y-3 w-full">
+                  <div className="p-3 bg-stone-50 border-2 border-stone-200 rounded-2xl shadow-inner max-w-[260px] sm:max-w-[280px] w-full">
                     <img
                       src={activePayment.qr_image}
                       alt={`${activePayment.payment_method} QR Demonstration`}
@@ -306,9 +356,9 @@ export const PaymentPortalPage: React.FC = () => {
                 </div>
 
                 {/* Right: Payment Metadata & Simulator Actions */}
-                <div className="md:col-span-6 space-y-5">
+                <div className="md:col-span-6 space-y-5 w-full">
                   
-                  <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2.5 text-xs font-mono">
+                  <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-2.5 text-xs font-mono break-words">
                     <div className="flex justify-between border-b border-stone-200 pb-1.5 font-sans">
                       <span className="text-stone-500">Application ID:</span>
                       <strong className="text-teal-dark">{activePayment.application_id}</strong>
@@ -376,10 +426,10 @@ export const PaymentPortalPage: React.FC = () => {
           /* ============================================================== */
           /* STAGE 1: PAYMENT GATEWAY SELECTION PAGE                        */
           /* ============================================================== */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
             
             {/* Left Column: Method Selection (7 cols) */}
-            <div className="lg:col-span-7 bg-white rounded-3xl border border-iu-border shadow-md p-6 sm:p-8 space-y-6">
+            <div className="lg:col-span-7 bg-white rounded-3xl border border-iu-border shadow-md p-6 sm:p-8 space-y-6 w-full">
               <div>
                 <span className="text-xs font-bold text-gold-warm uppercase tracking-wider">PAYMENT STEP</span>
                 <h2 className="text-xl sm:text-2xl font-black text-teal-dark mt-1">
@@ -391,7 +441,7 @@ export const PaymentPortalPage: React.FC = () => {
               </div>
 
               {/* Method Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 
                 {/* bKash Card */}
                 <div
@@ -458,7 +508,7 @@ export const PaymentPortalPage: React.FC = () => {
               {/* Security & Disclaimer Note */}
               <div className="p-4 bg-teal-50 border border-teal-100 rounded-2xl text-xs text-teal-900 space-y-1">
                 <div className="flex items-center gap-1.5 font-bold text-teal-dark">
-                  <ShieldAlert className="w-4 h-4 text-teal-deep" />
+                  <ShieldAlert className="w-4 h-4 text-teal-deep shrink-0" />
                   <span>Educational Sandbox Environment</span>
                 </div>
                 <p className="leading-relaxed">
@@ -480,11 +530,11 @@ export const PaymentPortalPage: React.FC = () => {
             </div>
 
             {/* Right Column: Fee Summary Panel (5 cols) */}
-            <div className="lg:col-span-5 bg-white rounded-3xl border border-iu-border shadow-md p-6 sm:p-8 space-y-6">
-              <div className="border-b border-stone-100 pb-3">
+            <div className="lg:col-span-5 bg-white rounded-3xl border border-iu-border shadow-md p-6 sm:p-8 space-y-6 w-full min-w-0">
+              <div className="border-b border-stone-100 pb-3 min-w-0">
                 <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Candidate Details</span>
-                <h3 className="text-lg font-bold text-teal-dark mt-0.5">{appData.full_name}</h3>
-                <p className="text-xs text-stone-500 font-mono">ID: {appData.app_id} · Roll: {appData.roll_number}</p>
+                <h3 className="text-lg font-bold text-teal-dark mt-0.5 break-words">{appData.full_name}</h3>
+                <p className="text-xs text-stone-500 font-mono break-words">ID: {appData.app_id} · Roll: {appData.roll_number}</p>
               </div>
 
               {/* Fee Breakdown Details */}
@@ -510,7 +560,7 @@ export const PaymentPortalPage: React.FC = () => {
 
                 <div className="pt-3 border-t border-stone-200 flex justify-between items-center text-base sm:text-lg font-black text-teal-dark">
                   <span>Total Payable:</span>
-                  <span className="text-teal-deep text-2xl">
+                  <span className="text-teal-deep text-2xl font-mono">
                     {fee?.formatted_total || `৳ ${fee?.total_payable ? fee.total_payable.toFixed(2) : '4,532.50'}`}
                   </span>
                 </div>
@@ -524,7 +574,7 @@ export const PaymentPortalPage: React.FC = () => {
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
                     : 'bg-amber-100 text-amber-900 border border-amber-300'
                 }`}>
-                  {isAlreadyPaid ? 'DEMO SUCCESS' : 'NOT PAID'}
+                  {isAlreadyPaid ? 'DEMO SUCCESS' : 'PAYMENT DUE'}
                 </span>
               </div>
 
@@ -553,7 +603,7 @@ export const PaymentPortalPage: React.FC = () => {
               </p>
             </div>
 
-            <div className="bg-stone-50 rounded-xl p-3 text-xs font-mono text-stone-700 text-left space-y-1 border border-stone-200">
+            <div className="bg-stone-50 rounded-xl p-3 text-xs font-mono text-stone-700 text-left space-y-1 border border-stone-200 break-words">
               <div>Method: <strong>{activePayment?.payment_method}</strong></div>
               <div>Reference: <strong>{activePayment?.reference_id}</strong></div>
               <div>Amount: <strong>{activePayment?.formatted_amount}</strong></div>

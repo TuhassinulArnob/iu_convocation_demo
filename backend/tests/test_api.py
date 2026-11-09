@@ -76,7 +76,19 @@ def test_public_application_tracking_not_found():
     assert res.status_code == 404
 
 def test_full_payment_simulation_flow():
-    # Login as student 1
+    # 1. Admin approves application to unlock payment
+    admin_login = client.post("/api/auth/login", json={
+        "identifier": "admin@convocation.iu.ac.bd",
+        "password": "AdminIU@2027"
+    })
+    admin_token = admin_login.json()["access_token"]
+    client.put(
+        "/api/admin/applications/IU27-DEMO-000101/status",
+        json={"new_status": "Approved (Demo)", "review_note": "Unlocked for payment testing."},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+
+    # 2. Login as student 1 (now approved)
     login_res = client.post("/api/auth/login", json={
         "identifier": "01811860339",
         "password": "StudentIU@2027"

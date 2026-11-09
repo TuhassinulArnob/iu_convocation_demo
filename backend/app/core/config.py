@@ -58,4 +58,14 @@ class Settings:
     MAX_GUESTS: int = 3
     SERVICE_CHARGE: float = 32.50
 
+    # Storage configurations
+    @property
+    def UPLOAD_DIR(self) -> str:
+        if os.getenv("VERCEL"):
+            path = "/tmp/uploads"
+        else:
+            path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
+        os.makedirs(path, exist_ok=True)
+        return path
+
 settings = Settings()

@@ -42,10 +42,28 @@ export const AdminDashboardPage: React.FC = () => {
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
-  const [newStatus, setNewStatus] = useState('');
-  const [reviewNote, setReviewNote] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusSuccessMessage, setStatusSuccessMessage] = useState<string | null>(null);
+
+  // Review Action Sub-Modals
+  const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
+  const [correctionNote, setCorrectionNote] = useState('');
+
+  const quickRejectionReasons = [
+    'Academic credentials could not be verified',
+    'Photo does not meet passport specifications',
+    'Degree information does not match university records',
+    'Duplicate application detected',
+  ];
+
+  const quickCorrectionNotes = [
+    'Photo blurry or invalid, please re-upload a clear passport photo',
+    'Incorrect exam year or session entered, please verify',
+    'Gown size not selected properly',
+  ];
 
   // Notices Tab State
   const [notices, setNotices] = useState<any[]>([]);
@@ -176,8 +194,6 @@ export const AdminDashboardPage: React.FC = () => {
     try {
       const detail = await api.getAdminApplicationDetail(appId);
       setSelectedApp(detail);
-      setNewStatus(detail.status);
-      setReviewNote(detail.review_note || '');
     } catch (err: any) {
       console.error('Failed to fetch application profile:', err);
       setReviewError(err.message || 'Could not load application details. Please verify your connection.');
@@ -186,46 +202,42 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  // 8. Update Application Status
-  const handleStatusChange = async () => {
+  // 8. Execute Application Status Decision (Approve, Reject, Request Correction, Keep Under Review)
+  const handleExecuteStatusChange = async (targetStatus: string, note: string) => {
     if (!selectedApp) return;
-
-    if (newStatus.includes('Rejected')) {
-      const confirmReject = window.confirm(
-        `Are you sure you want to REJECT application ${selectedApp.app_id}?\n\nThis will update candidate records.`
-      );
-      if (!confirmReject) return;
-    }
 
     setUpdatingStatus(true);
     setStatusSuccessMessage(null);
 
     try {
-      const updated = await api.updateAdminApplicationStatus(selectedApp.app_id, newStatus, reviewNote);
+      await api.updateAdminApplicationStatus(selectedApp.app_id, targetStatus, note);
       
       // Update local modal record
-      setSelectedApp({
-        ...selectedApp,
-        status: newStatus,
-        review_note: reviewNote,
+      setSelectedApp((prev: any) => ({
+        ...prev,
+        status: targetStatus,
+        review_note: note,
         status_history: [
-          ...(selectedApp.status_history || []),
+          ...(prev.status_history || []),
           {
-            previous_status: selectedApp.status,
-            new_status: newStatus,
+            previous_status: prev.status,
+            new_status: targetStatus,
             admin_identifier: adminUser?.email || 'Demo Admin',
-            review_note: reviewNote || `Status updated to ${newStatus}`,
+            review_note: note || `Status updated to ${targetStatus}`,
             timestamp: 'Just now'
           }
         ]
-      });
+      }));
 
       // Update in local table array without full reload
       setApplications(prev => prev.map(a => 
-        a.app_id === selectedApp.app_id ? { ...a, status: newStatus } : a
+        a.app_id === selectedApp.app_id ? { ...a, status: targetStatus, review_note: note } : a
       ));
 
-      setStatusSuccessMessage(`Status updated to "${newStatus}" and logged in database.`);
+      setStatusSuccessMessage(`Application ${selectedApp.app_id} status updated to "${targetStatus}".`);
+      setConfirmApproveOpen(false);
+      setRejectModalOpen(false);
+      setCorrectionModalOpen(false);
 
       // Refresh overview stats in the background
       fetchStats();
@@ -540,14 +552,14 @@ export const AdminDashboardPage: React.FC = () => {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="p-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-medium text-stone-700"
+                  className="p-2 bg-stone-50 border border-stone-200 rounded-lg text-xs font-semibold text-stone-700"
                 >
-                  <option value="All">All Statuses</option>
-                  <option value="Approved (Demo)">Approved (Demo)</option>
-                  <option value="Under Review">Under Review</option>
-                  <option value="Awaiting Payment">Awaiting Payment</option>
-                  <option value="Account Created">Account Created</option>
-                  <option value="Rejected (Demo)">Rejected (Demo)</option>
+                  <option value="All">All Applications</option>
+                  <option value="Pending Review">Pending Review</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                  <option value="Payment Due">Payment Due</option>
+                  <option value="Demo Payment Completed">Demo Payment Completed</option>
                 </select>
 
                 {/* Payment Filter */}
@@ -927,46 +939,74 @@ export const AdminDashboardPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Status Transition Panel */}
+                  {/* Status Decision Panel — 4 Distinct Action Buttons */}
                   <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
-                    <h4 className="font-bold text-teal-dark uppercase text-[11px] tracking-wider">
-                      Update Application Status
-                    </h4>
-                    
-                    <div>
-                      <label className="block text-stone-600 font-semibold mb-1">Select New Status</label>
-                      <select
-                        value={newStatus}
-                        onChange={(e) => setNewStatus(e.target.value)}
-                        className="w-full p-2.5 bg-white border border-stone-200 rounded-xl text-xs font-bold text-teal-dark focus:outline-none focus:ring-2 focus:ring-teal-deep"
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-teal-dark uppercase text-[11px] tracking-wider">
+                        Administrative Decision
+                      </h4>
+                      <span className="text-xs font-semibold text-stone-500">
+                        Current: <strong className="text-teal-dark font-bold">{selectedApp.status}</strong>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Button 1: Approve Application */}
+                      <button
+                        type="button"
+                        onClick={() => setConfirmApproveOpen(true)}
+                        disabled={updatingStatus || selectedApp.status === 'Approved' || selectedApp.status === 'APPROVED'}
+                        className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                       >
-                        <option value="Under Review">Under Review</option>
-                        <option value="Approved (Demo)">Approved (Demo) — Grants Ceremony Entry & Printable Card</option>
-                        <option value="Rejected (Demo)">Rejected (Demo)</option>
-                        <option value="Correction Required">Correction Required</option>
-                        <option value="Submitted">Submitted</option>
-                      </select>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Approve Application</span>
+                      </button>
+
+                      {/* Button 2: Reject Application */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRejectionReason(selectedApp.review_note || '');
+                          setRejectModalOpen(true);
+                        }}
+                        disabled={updatingStatus || selectedApp.status === 'Rejected' || selectedApp.status === 'REJECTED'}
+                        className="px-4 py-3 border-2 border-rose-500 text-rose-600 hover:bg-rose-50 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Reject Application</span>
+                      </button>
+
+                      {/* Button 3: Request Correction */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCorrectionNote('');
+                          setCorrectionModalOpen(true);
+                        }}
+                        disabled={updatingStatus}
+                        className="px-4 py-3 border-2 border-amber-500 text-amber-700 hover:bg-amber-50 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span>Request Correction</span>
+                      </button>
+
+                      {/* Button 4: Keep Under Review */}
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteStatusChange('PENDING_REVIEW', 'Application retained under administrative review.')}
+                        disabled={updatingStatus}
+                        className="px-4 py-3 border border-stone-300 text-stone-600 hover:bg-stone-100 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span>Keep Under Review</span>
+                      </button>
                     </div>
 
-                    <div>
-                      <label className="block text-stone-600 font-semibold mb-1">Administrative Remarks / Review Note</label>
-                      <textarea
-                        rows={2}
-                        value={reviewNote}
-                        onChange={(e) => setReviewNote(e.target.value)}
-                        placeholder="Enter verification remarks..."
-                        className="w-full p-2.5 bg-white border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-deep"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleStatusChange}
-                      disabled={updatingStatus}
-                      className="w-full py-2.5 bg-teal-deep hover:bg-teal-hover text-white font-bold rounded-xl text-xs transition disabled:opacity-50 shadow-sm"
-                    >
-                      {updatingStatus ? 'Updating Status in Database...' : 'Save Status Change & Log History'}
-                    </button>
+                    {updatingStatus && (
+                      <p className="text-center text-xs text-teal-deep font-semibold animate-pulse pt-1">
+                        Updating status in database...
+                      </p>
+                    )}
                   </div>
 
                   {/* Status History Audit Trail */}
@@ -1004,6 +1044,186 @@ export const AdminDashboardPage: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Sub-Modal 1: Confirm Approval */}
+      {confirmApproveOpen && selectedApp && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-teal-dark">
+                Approve Convocation Application?
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Approve application for <strong>{selectedApp.full_name}</strong> (<code className="font-mono text-teal-deep">{selectedApp.app_id}</code>)?
+              </p>
+              <p className="text-xs text-emerald-800 font-medium bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                This will set status to <strong>APPROVED</strong> and enable the candidate to proceed with payment on their Student Dashboard.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmApproveOpen(false)}
+                disabled={updatingStatus}
+                className="w-1/2 py-2.5 border border-stone-300 text-stone-700 font-bold rounded-xl text-xs hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={updatingStatus}
+                onClick={() => handleExecuteStatusChange('APPROVED', 'Application verified and approved by the Convocation Committee.')}
+                className="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition disabled:opacity-50"
+              >
+                {updatingStatus ? 'Approving...' : 'Confirm Approval'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-Modal 2: Reject Application */}
+      {rejectModalOpen && selectedApp && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-stone-100">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <XCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-rose-950">
+                  Reject Application — {selectedApp.app_id}
+                </h3>
+                <p className="text-xs text-stone-500">Candidate: {selectedApp.full_name}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-stone-700">Quick Reason Presets</label>
+              <div className="flex flex-wrap gap-1.5">
+                {quickRejectionReasons.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setRejectionReason(chip)}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium transition"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-stone-700">
+                Reason for Rejection <span className="text-stone-400 font-normal">(visible to candidate)</span>
+              </label>
+              <textarea
+                rows={3}
+                value={rejectionReason}
+                maxLength={500}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Specify the verification failure reason (minimum 20 characters)..."
+                className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+              <div className="flex justify-between text-[11px] text-stone-400">
+                <span>{rejectionReason.length < 20 ? `${20 - rejectionReason.length} more characters required` : '✓ Minimum length satisfied'}</span>
+                <span>{rejectionReason.length}/500 chars</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setRejectModalOpen(false)}
+                disabled={updatingStatus}
+                className="px-4 py-2 border border-stone-300 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={rejectionReason.trim().length < 20 || updatingStatus}
+                onClick={() => handleExecuteStatusChange('REJECTED', rejectionReason.trim())}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow transition disabled:opacity-50"
+              >
+                {updatingStatus ? 'Rejecting...' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-Modal 3: Request Correction */}
+      {correctionModalOpen && selectedApp && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-stone-100">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <Edit3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-amber-950">
+                  Request Correction — {selectedApp.app_id}
+                </h3>
+                <p className="text-xs text-stone-500">Candidate: {selectedApp.full_name}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-stone-700">Quick Correction Presets</label>
+              <div className="flex flex-wrap gap-1.5">
+                {quickCorrectionNotes.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCorrectionNote(chip)}
+                    className="text-[11px] px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-medium transition"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-stone-700">
+                Correction Instructions <span className="text-stone-400 font-normal">(visible to candidate)</span>
+              </label>
+              <textarea
+                rows={3}
+                value={correctionNote}
+                maxLength={500}
+                onChange={(e) => setCorrectionNote(e.target.value)}
+                placeholder="Explain what the candidate needs to rectify..."
+                className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setCorrectionModalOpen(false)}
+                disabled={updatingStatus}
+                className="px-4 py-2 border border-stone-300 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!correctionNote.trim() || updatingStatus}
+                onClick={() => handleExecuteStatusChange('CORRECTION_REQUIRED', correctionNote.trim())}
+                className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow transition disabled:opacity-50"
+              >
+                {updatingStatus ? 'Sending...' : 'Send Correction Request'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -78,6 +78,10 @@ export const RegisterWizardPage: React.FC = () => {
   // Dynamic fee calculation result
   const [feeBreakdown, setFeeBreakdown] = useState<any>(null);
 
+  // Photo upload specific state
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
   // Load departments and check draft on mount
   useEffect(() => {
     // 1. Fetch departments
@@ -289,24 +293,33 @@ export const RegisterWizardPage: React.FC = () => {
     }
   };
 
-  // Photo Upload Handler
+  // Photo Upload Handler with safe client validation & error reporting
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
+    setPhotoError(null);
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedTypes.includes(file.type.toLowerCase()) && !['jpg', 'jpeg', 'png'].includes(ext)) {
+      setPhotoError("Invalid image format. Only JPG, JPEG, and PNG files are accepted.");
+      return;
+    }
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("File size exceeds 2MB limit. Please choose a photo under 2MB.");
+      setPhotoError("File size exceeds 2 MB limit. Please select a passport-size photo under 2 MB.");
       return;
     }
 
     try {
-      setLoading(true);
+      setPhotoUploading(true);
       const res = await api.uploadPhoto(file);
       setFormData((prev: any) => ({ ...prev, photo_url: res.photo_url }));
+      await syncApplicationData(4);
     } catch (err: any) {
-      alert(err.message || "Failed to upload photo.");
+      setPhotoError(err.message || "Failed to upload photo. Please check your connection and try again.");
     } finally {
-      setLoading(false);
+      setPhotoUploading(false);
     }
   };
 
@@ -413,11 +426,21 @@ export const RegisterWizardPage: React.FC = () => {
               REGISTRATION SUBMITTED
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-teal-dark pt-2">
-              Registration Successful!
+              Application Submitted Successfully!
             </h1>
-            <p className="text-xs sm:text-sm text-stone-500">
-              Your convocation demonstration application has been submitted to the database.
+            <p className="text-xs sm:text-sm text-stone-600 font-medium">
+              Your application is now under administrative review.
             </p>
+          </div>
+
+          {/* Status Badge */}
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-left">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-full bg-amber-200 text-amber-900 font-bold text-xs uppercase tracking-wide">
+                Status: Pending Review
+              </span>
+              <span className="text-xs text-amber-800 font-medium">(Verification in progress)</span>
+            </div>
           </div>
 
           {/* Generated Application ID Box */}
@@ -441,7 +464,7 @@ export const RegisterWizardPage: React.FC = () => {
           </div>
 
           {/* Confirmation Instructions */}
-          <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 text-left text-xs text-stone-700 space-y-2">
+          <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 text-left text-xs text-stone-700 space-y-2.5">
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>Your account was created with your user-defined password.</span>
@@ -450,9 +473,9 @@ export const RegisterWizardPage: React.FC = () => {
               <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>Use your Email/Mobile (<strong>{formData.email || formData.mobile}</strong>) and password to sign in.</span>
             </div>
-            <div className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span>After signing in, visit the <strong>Payment Portal</strong> to simulate your fee transaction.</span>
+            <div className="flex items-start gap-2 bg-white p-2.5 rounded-xl border border-stone-200 text-stone-800 font-medium">
+              <Info className="w-4 h-4 text-teal-deep shrink-0 mt-0.5" />
+              <span><strong>Next Step:</strong> Once university staff approves your application, the fee payment option will be enabled on your dashboard. You will then be able to pay via bKash, Rocket, or Nagad.</span>
             </div>
           </div>
 
@@ -1087,8 +1110,21 @@ export const RegisterWizardPage: React.FC = () => {
               <p className="text-xs text-stone-500">A clear passport-size formal photograph is required for your Convocation Card.</p>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-stone-300 rounded-2xl bg-stone-50 hover:bg-teal-50/30 transition text-center">
-              {formData.photo_url ? (
+            {/* Photo Error Banner */}
+            {photoError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{photoError}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-stone-300 rounded-2xl bg-stone-50 hover:bg-teal-50/30 transition text-center relative">
+              {photoUploading ? (
+                <div className="py-12 flex flex-col items-center space-y-3">
+                  <div className="w-10 h-10 border-4 border-teal-200 border-t-teal-deep rounded-full animate-spin" />
+                  <p className="text-xs font-semibold text-teal-dark">Uploading and validating photograph...</p>
+                </div>
+              ) : formData.photo_url ? (
                 <div className="space-y-4">
                   <img
                     src={formData.photo_url}
@@ -1096,22 +1132,28 @@ export const RegisterWizardPage: React.FC = () => {
                     className="w-36 h-44 object-cover rounded-xl shadow-md border-2 border-teal-deep mx-auto"
                   />
                   <div className="flex gap-2 justify-center">
-                    <label className="cursor-pointer px-3 py-1.5 bg-teal-deep text-white text-xs font-semibold rounded-lg hover:bg-teal-hover">
+                    <label className="cursor-pointer px-3 py-1.5 bg-teal-deep text-white text-xs font-semibold rounded-lg hover:bg-teal-hover transition shadow-sm">
                       Replace Photo
                       <input type="file" accept="image/jpeg,image/png,image/jpg" onChange={handlePhotoUpload} className="hidden" />
                     </label>
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, photo_url: '' })}
-                      className="px-3 py-1.5 bg-rose-50 text-rose-700 text-xs font-semibold rounded-lg hover:bg-rose-100"
+                      onClick={() => {
+                        setFormData({ ...formData, photo_url: '' });
+                        setPhotoError(null);
+                      }}
+                      className="px-3 py-1.5 bg-rose-50 text-rose-700 text-xs font-semibold rounded-lg hover:bg-rose-100 transition border border-rose-200"
                     >
                       Remove
                     </button>
                   </div>
+                  <p className="text-xs text-emerald-700 font-semibold flex items-center justify-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Photo attached successfully
+                  </p>
                 </div>
               ) : (
                 <label className="cursor-pointer flex flex-col items-center space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-teal-50 text-teal-deep flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-teal-50 text-teal-deep flex items-center justify-center shadow-inner">
                     <Camera className="w-8 h-8" />
                   </div>
                   <div>
@@ -1128,6 +1170,12 @@ export const RegisterWizardPage: React.FC = () => {
               )}
             </div>
 
+            {!formData.photo_url && !photoUploading && (
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 p-2.5 rounded-xl font-medium">
+                ⚠️ A passport photo is required to continue. Please upload a clear photo of yourself.
+              </p>
+            )}
+
             <div className="text-xs text-stone-500 bg-stone-100 p-3 rounded-xl">
               <strong>Photo tips:</strong> Neutral facial expression, plain light background, properly centered head and shoulders.
             </div>
@@ -1142,11 +1190,20 @@ export const RegisterWizardPage: React.FC = () => {
               </button>
               <button
                 type="button"
+                disabled={!formData.photo_url || photoUploading}
                 onClick={async () => {
+                  if (!formData.photo_url) {
+                    setPhotoError("A passport photo is required to continue. Please upload a clear photo of yourself.");
+                    return;
+                  }
                   await syncApplicationData(5);
                   setCurrentStep(5);
                 }}
-                className="px-6 py-2.5 bg-teal-deep text-white font-bold rounded-xl text-xs hover:bg-teal-hover flex items-center gap-1.5"
+                className={`px-6 py-2.5 font-bold rounded-xl text-xs flex items-center gap-1.5 transition ${
+                  !formData.photo_url || photoUploading
+                    ? 'bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300'
+                    : 'bg-teal-deep text-white hover:bg-teal-hover shadow-sm'
+                }`}
               >
                 Next: Gown & Guests <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -1408,8 +1465,20 @@ export const RegisterWizardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="text-xs text-stone-600 bg-stone-50 p-4 rounded-2xl border border-stone-200 leading-relaxed">
-              After submitting your application in Step 8, you can proceed to the <strong>Secure Payment Portal</strong> at any time to simulate payment and track your convocation status.
+            <div className="text-xs text-stone-700 bg-teal-50/70 p-4 rounded-2xl border border-teal-200 leading-relaxed space-y-2">
+              <div className="font-bold text-teal-dark flex items-center gap-1.5">
+                <Info className="w-4 h-4 text-teal-deep shrink-0" />
+                <span>Approval Workflow Notice:</span>
+              </div>
+              <p>
+                • After submitting your application in Step 8, it will be reviewed by the Convocation Committee.
+              </p>
+              <p>
+                • Once approved, the payment option will be enabled on your Student Dashboard.
+              </p>
+              <p className="font-semibold text-teal-900">
+                You do NOT pay during registration. Official Workflow: Registration → Review → Approval → Payment.
+              </p>
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-stone-100">

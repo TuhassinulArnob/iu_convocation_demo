@@ -33,12 +33,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure uploads directory exists (use /tmp on Vercel)
-if os.getenv("VERCEL"):
-    UPLOAD_DIR = "/tmp/uploads"
-else:
-    UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Ensure uploads directory exists (use shared settings.UPLOAD_DIR)
+UPLOAD_DIR = settings.UPLOAD_DIR
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Mount assets directory (Logo, Payment, refereceSS)

@@ -70,6 +70,18 @@ def get_my_application(current_user: User = Depends(get_current_user), db: Sessi
     ]
 
     has_paid = any(p.status == "DEMO SUCCESS" for p in app.payments)
+    is_approved = app.status in ["APPROVED", "Approved", "Approved (Demo)"]
+    is_rejected = "Rejected" in app.status or app.status == "REJECTED"
+
+    if has_paid:
+        payment_status = "DEMO SUCCESS"
+        can_pay = False
+    elif is_approved:
+        payment_status = "PAYMENT_DUE"
+        can_pay = True
+    else:
+        payment_status = "NOT_AVAILABLE"
+        can_pay = False
 
     return {
         "id": app.id,
@@ -101,6 +113,10 @@ def get_my_application(current_user: User = Depends(get_current_user), db: Sessi
         "current_step": app.current_step or 1,
         "review_note": app.review_note,
         "has_paid": has_paid,
+        "is_approved": is_approved,
+        "is_rejected": is_rejected,
+        "can_pay": can_pay,
+        "payment_status": payment_status,
         "fee_breakdown": fee_data,
         "payments": payments,
         "status_history": history,
@@ -217,23 +233,32 @@ def submit_my_application(current_user: User = Depends(get_current_user), db: Se
     if not app:
         raise HTTPException(status_code=404, detail="No application record found.")
 
-    has_paid = any(p.status == "DEMO SUCCESS" for p in app.payments)
-    new_status = "Under Review" if has_paid else "Awaiting Payment"
-    
+    if not app.photo_url:
+        raise HTTPException(
+            status_code=400,
+            detail="A passport-size photograph is required before submitting your application."
+        )
+
     prev = app.status
+    new_status = "PENDING_REVIEW"
     app.status = new_status
+    app.current_step = 8
     
     history = ApplicationStatusHistory(
         application_id=app.id,
         previous_status=prev,
         new_status=new_status,
-        admin_identifier="Student",
-        review_note="Application submitted by applicant for convocation demonstration."
+        admin_identifier="Applicant",
+        review_note="Application submitted by applicant for demonstration administrative review."
     )
     db.add(history)
     db.commit()
 
-    return {"message": f"Application submitted successfully. Current status: {new_status}", "status": new_status}
+    return {
+        "message": "Application submitted successfully. Your application is now under administrative review.",
+        "status": new_status,
+        "payment_status": "NOT_AVAILABLE"
+    }
 
 @router.get("/my/card")
 def get_convocation_card(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -241,10 +266,13 @@ def get_convocation_card(current_user: User = Depends(get_current_user), db: Ses
     if not app:
         raise HTTPException(status_code=404, detail="Application not found.")
 
-    if app.status != "Approved (Demo)":
+    has_paid = any(p.status == "DEMO SUCCESS" for p in app.payments)
+    is_approved = app.status in ["APPROVED", "Approved", "Approved (Demo)"]
+
+    if not is_approved or not has_paid:
         raise HTTPException(
             status_code=400,
-            detail="Convocation card is only generated after demonstration approval by the department/admin. Current status: " + app.status
+            detail="Convocation card is only generated after administrative approval and completed demonstration fee payment."
         )
 
     dept = db.query(Department).filter(Department.id == app.department_id).first()
@@ -290,53 +318,52 @@ def track_application_public(app_id: str, db: Session = Depends(get_db)):
 
     dept = db.query(Department).filter(Department.id == app.department_id).first()
     has_paid = any(p.status == "DEMO SUCCESS" for p in app.payments)
-    payment_status = "DEMO SUCCESS" if has_paid else "NOT PAID"
+    is_approved = app.status in ["APPROVED", "Approved", "Approved (Demo)"]
+    is_rejected = "Rejected" in app.status or app.status == "REJECTED"
 
-    # Timeline construction
-    # Steps: 1. Account Created, 2. Application Submitted, 3. Payment Demonstration, 4. Under Review, 5. Approved (Demo) / Rejected (Demo)
-    status_order = {
-        "Account Created": 1,
-        "Form Incomplete": 1,
-        "Submitted": 2,
-        "Awaiting Payment": 2,
-        "Payment Simulated": 3,
-        "Under Review": 4,
-        "Approved (Demo)": 5,
-        "Rejected (Demo)": 5,
-        "Correction Required": 4
-    }
-    current_step = status_order.get(app.status, 1)
+    if has_paid:
+        payment_status = "DEMO SUCCESS"
+    elif is_approved:
+        payment_status = "PAYMENT_DUE"
+    else:
+        payment_status = "NOT_AVAILABLE"
 
+    # Timeline construction:
+    # 1. Registration Recorded
+    # 2. Application Submitted
+    # 3. Administrative Review & Approval
+    # 4. Fee Payment
+    # 5. Final Convocation Status
     timeline = [
         {
             "step": 1,
-            "title": "Account Created",
+            "title": "Account & Draft",
             "desc": "Initial demonstration registration recorded",
-            "status": "completed" if current_step >= 1 else "pending"
+            "status": "completed"
         },
         {
             "step": 2,
             "title": "Application Submitted",
             "desc": "Personal, academic, and degree details entered",
-            "status": "completed" if current_step >= 2 else ("active" if current_step == 1 else "pending")
+            "status": "completed" if app.status != "Account Created" and app.status != "Form Incomplete" else "active"
         },
         {
             "step": 3,
-            "title": "Payment Demonstration",
-            "desc": "Simulated bKash/Rocket QR payment completed",
-            "status": "completed" if has_paid or current_step >= 3 else ("active" if current_step == 2 else "pending")
+            "title": "Administrative Review",
+            "desc": "Verification by Convocation Administrative Cell",
+            "status": "completed" if is_approved else ("failed" if is_rejected else ("active" if app.status in ["PENDING_REVIEW", "Pending Review", "Under Review", "Submitted"] else "pending"))
         },
         {
             "step": 4,
-            "title": "Under Department Review",
-            "desc": "Demonstration verification in progress",
-            "status": "completed" if current_step >= 5 else ("active" if current_step == 4 else "pending")
+            "title": "Fee Payment",
+            "desc": "Simulated bKash/Rocket QR payment gateway",
+            "status": "completed" if has_paid else ("active" if is_approved else "pending")
         },
         {
             "step": 5,
-            "title": app.status if "Approved" in app.status or "Rejected" in app.status else "Final Decision",
-            "desc": "Demonstration convocation card activation",
-            "status": "completed" if "Approved" in app.status else ("failed" if "Rejected" in app.status else "pending")
+            "title": "Card Activation",
+            "desc": "Printable Convocation Entry Pass issued",
+            "status": "completed" if (is_approved and has_paid) else ("failed" if is_rejected else "pending")
         }
     ]
 

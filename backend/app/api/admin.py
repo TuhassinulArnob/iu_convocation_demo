@@ -109,7 +109,36 @@ def list_applications(
         query = query.filter(Application.degree_level.ilike(f"%{degree_level}%"))
 
     if status_filter and status_filter.lower() != "all":
-        query = query.filter(Application.status == status_filter)
+        sf = status_filter.strip().lower()
+        if "pending" in sf or "review" in sf:
+            query = query.filter(Application.status.in_(["PENDING_REVIEW", "Pending Review", "Under Review", "Submitted"]))
+        elif "approve" in sf:
+            query = query.filter(Application.status.in_(["APPROVED", "Approved", "Approved (Demo)"]))
+        elif "reject" in sf:
+            query = query.filter(Application.status.in_(["REJECTED", "Rejected", "Rejected (Demo)"]))
+        elif "correction" in sf:
+            query = query.filter(Application.status.in_(["CORRECTION_REQUIRED", "Correction Required"]))
+        elif "payment due" in sf:
+            query = query.filter(
+                Application.status.in_(["APPROVED", "Approved", "Approved (Demo)"]),
+                ~Application.payments.any(PaymentSimulation.status == "DEMO SUCCESS")
+            )
+        elif "completed" in sf or "demo success" in sf:
+            query = query.filter(Application.payments.any(PaymentSimulation.status == "DEMO SUCCESS"))
+        else:
+            query = query.filter(Application.status == status_filter)
+
+    if payment_status and payment_status.lower() != "all":
+        ps = payment_status.strip().lower()
+        if "demo success" in ps or "completed" in ps or "paid" == ps:
+            query = query.filter(Application.payments.any(PaymentSimulation.status == "DEMO SUCCESS"))
+        elif "due" in ps:
+            query = query.filter(
+                Application.status.in_(["APPROVED", "Approved", "Approved (Demo)"]),
+                ~Application.payments.any(PaymentSimulation.status == "DEMO SUCCESS")
+            )
+        elif "not paid" in ps or "not available" in ps:
+            query = query.filter(~Application.payments.any(PaymentSimulation.status == "DEMO SUCCESS"))
 
     total_count = query.count()
     apps = query.order_by(Application.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
@@ -120,10 +149,13 @@ def list_applications(
         has_paid = any(p.status == "DEMO SUCCESS" for p in a.payments)
         fee = a.fee_breakdown
         
-        # If payment_status filter is applied
-        p_status = "DEMO SUCCESS" if has_paid else "NOT PAID"
-        if payment_status and payment_status.lower() != "all" and p_status != payment_status:
-            continue
+        is_app_approved = a.status in ["APPROVED", "Approved", "Approved (Demo)"]
+        if has_paid:
+            p_status = "DEMO SUCCESS"
+        elif is_app_approved:
+            p_status = "PAYMENT_DUE"
+        else:
+            p_status = "NOT PAID"
 
         items.append({
             "id": a.id,
@@ -238,7 +270,8 @@ def get_application_detail(
         "photo_url": app.photo_url,
         "status": app.status,
         "review_note": app.review_note,
-        "payment_status": "DEMO SUCCESS" if has_paid else "NOT PAID",
+        "payment_status": "DEMO SUCCESS" if has_paid else ("PAYMENT_DUE" if (app.status in ["APPROVED", "Approved", "Approved (Demo)"]) else "NOT_AVAILABLE"),
+        "payment_unlocked": (app.status in ["APPROVED", "Approved", "Approved (Demo)"] and not has_paid),
         "fee_breakdown": {
             "registration_fee": fee.registration_fee if fee else 4500.0,
             "certificate_fee": fee.certificate_fee if fee else 0.0,
@@ -267,14 +300,24 @@ def update_application_status(
     if not app:
         raise HTTPException(status_code=404, detail="Application not found.")
 
-    allowed_statuses = [
-        "Submitted", "Under Review", "Approved (Demo)", "Rejected (Demo)", "Correction Required"
-    ]
-    if req.new_status not in allowed_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {allowed_statuses}")
+    raw_status = req.new_status.strip()
+    status_lower = raw_status.lower()
+    
+    if raw_status in ["Submitted", "Under Review", "Approved (Demo)", "Rejected (Demo)", "Correction Required", "PENDING_REVIEW", "APPROVED", "REJECTED", "CORRECTION_REQUIRED", "Approved", "Rejected"]:
+        canonical_status = raw_status
+    elif "approve" in status_lower:
+        canonical_status = "APPROVED"
+    elif "reject" in status_lower:
+        canonical_status = "REJECTED"
+    elif "correction" in status_lower:
+        canonical_status = "CORRECTION_REQUIRED"
+    elif "review" in status_lower or "pending" in status_lower:
+        canonical_status = "PENDING_REVIEW"
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid status: {raw_status}")
 
     prev_status = app.status
-    app.status = req.new_status
+    app.status = canonical_status
     if req.review_note:
         app.review_note = req.review_note
 
@@ -282,18 +325,23 @@ def update_application_status(
     history = ApplicationStatusHistory(
         application_id=app.id,
         previous_status=prev_status,
-        new_status=req.new_status,
+        new_status=canonical_status,
         admin_identifier=admin.email or "Admin",
-        review_note=req.review_note or f"Status transitioned to {req.new_status} by Demo Administrator."
+        review_note=req.review_note or f"Status transitioned to {canonical_status} by Administrative Review."
     )
     db.add(history)
     db.commit()
 
+    has_paid = any(p.status == "DEMO SUCCESS" for p in app.payments)
+    payment_status = "DEMO SUCCESS" if has_paid else ("PAYMENT_DUE" if canonical_status == "APPROVED" else "NOT_AVAILABLE")
+
     return {
-        "message": f"Application status successfully changed to {req.new_status}",
+        "message": f"Application status successfully changed to {canonical_status}",
         "app_id": app.app_id,
         "previous_status": prev_status,
-        "new_status": req.new_status
+        "new_status": canonical_status,
+        "payment_status": payment_status,
+        "payment_unlocked": (canonical_status == "APPROVED" and not has_paid)
     }
 
 # Notice Management

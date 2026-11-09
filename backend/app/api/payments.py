@@ -26,6 +26,14 @@ def initiate_payment(
     if not app:
         raise HTTPException(status_code=404, detail="Application record not found.")
 
+    # 1. Enforce Payment Security: User cannot initiate payment unless application is approved
+    is_approved = app.status in ["APPROVED", "Approved", "Approved (Demo)"]
+    if not is_approved:
+        raise HTTPException(
+            status_code=403,
+            detail="Payment is locked. Your application is currently under administrative review and must be approved before fee payment can be initiated."
+        )
+
     method = req.payment_method.strip()
     if method not in ["bKash", "Rocket"]:
         raise HTTPException(status_code=400, detail="Invalid payment method. Choose 'bKash' or 'Rocket'.")
@@ -85,16 +93,17 @@ def simulate_payment_action(
         payment.status = "DEMO SUCCESS"
         payment.simulated_at = datetime.now(timezone.utc)
         
-        # Advance application status
+        # Application remains approved with fee recorded
         prev_status = app.status
-        app.status = "Under Review"
+        new_status = "APPROVED" if prev_status in ["APPROVED", "Approved", "Approved (Demo)"] else prev_status
+        app.status = new_status
 
         history = ApplicationStatusHistory(
             application_id=app.id,
             previous_status=prev_status,
-            new_status="Under Review",
+            new_status=new_status,
             admin_identifier="Demo Payment Gateway",
-            review_note=f"Simulated payment success via {payment.payment_method}. Ref: {payment.reference_id}."
+            review_note=f"Simulated payment success via {payment.payment_method}. Ref: {payment.reference_id}. Convocation card entry unlocked."
         )
         db.add(history)
         db.commit()

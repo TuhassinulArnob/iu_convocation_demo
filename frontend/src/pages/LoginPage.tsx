@@ -50,18 +50,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const fillDemoStudent = () => {
-    setIdentifier('1812045');
-    setPassword('StudentIU@2027');
-    setError(null);
-  };
-
-  const fillDemoAdmin = () => {
-    setIdentifier('admin@convocation.iu.ac.bd');
-    setPassword('AdminIU@2027');
-    setError(null);
-  };
-
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -98,30 +86,6 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Demo Credentials Autofill Banner */}
-          <div className="mb-6 p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs space-y-2">
-            <div className="flex items-center gap-1.5 font-bold text-teal-dark">
-              <Sparkles className="w-3.5 h-3.5 text-gold-warm" />
-              <span>Quick Demo Credentials:</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={fillDemoStudent}
-                className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-deep font-semibold rounded-lg border border-teal-200 transition"
-              >
-                🎓 Student Demo
-              </button>
-              <button
-                type="button"
-                onClick={fillDemoAdmin}
-                className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-deep font-semibold rounded-lg border border-teal-200 transition"
-              >
-                🛡️ Admin Demo
-              </button>
-            </div>
-          </div>
-
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2.5">
@@ -131,7 +95,7 @@ export const LoginPage: React.FC = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5" autoComplete="off">
             
             {/* Identifier */}
             <div>
@@ -218,14 +182,13 @@ export const LoginPage: React.FC = () => {
 
           {/* Staff Login Link */}
           <div className="mt-6 pt-5 border-t border-stone-100 text-center">
-            <button
-              type="button"
-              onClick={fillDemoAdmin}
-              className="text-xs text-stone-500 hover:text-teal-deep inline-flex items-center gap-1.5 transition"
+            <Link
+              to="/admin/login"
+              className="text-xs text-stone-500 hover:text-teal-deep inline-flex items-center gap-1.5 transition font-medium"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>University staff login (Demo Admin)</span>
-            </button>
+              <span>University staff login</span>
+            </Link>
           </div>
 
         </div>

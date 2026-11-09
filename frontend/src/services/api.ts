@@ -1,4 +1,6 @@
 // Central API client for IU Convocation 2027 Demo Portal
+import { isSupabaseConfigured, uploadToSupabaseStorage } from './supabase';
+
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
 
 export function getAuthToken(): string | null {
@@ -65,17 +67,27 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!response.ok) {
-    let errorDetail = 'An error occurred';
+    let errorDetail = `Request failed (${response.status})`;
     try {
-      const errJson = await response.json();
-      errorDetail = errJson.detail || errJson.message || errorDetail;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const errJson = await response.json();
+        errorDetail = errJson.detail || errJson.message || errorDetail;
+      } else {
+        const text = await response.text();
+        errorDetail = text.trim() || errorDetail;
+      }
     } catch {
-      errorDetail = await response.text() || errorDetail;
+      // fallback
     }
     throw new Error(errorDetail);
   }
 
-  return response.json();
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+  return response.text() as unknown as T;
 }
 
 export const api = {
@@ -137,7 +149,37 @@ export const api = {
 
   // File Upload
   uploadPhoto: async (file: File) => {
+    // 1. Client-side validation: format & max 2MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!allowedTypes.includes(file.type.toLowerCase()) && !['jpg', 'jpeg', 'png'].includes(ext)) {
+      throw new Error('Invalid format: Only JPG, JPEG, and PNG images are accepted.');
+    }
+    const maxBytes = 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      throw new Error('File size exceeds the 2 MB limit. Please upload a smaller passport photo.');
+    }
+
     const token = getAuthToken();
+    const currentUser = getCurrentUser();
+
+    // 2. If Supabase is configured and we have an authenticated user ID, upload to Supabase Storage first
+    if (isSupabaseConfigured() && currentUser?.id) {
+      try {
+        const supaResult = await uploadToSupabaseStorage(String(currentUser.id), file);
+        // Also sync photo_url to backend application
+        try {
+          await api.updateMyApplication({ photo_url: supaResult.photo_url });
+        } catch {
+          // ignore sync failure
+        }
+        return supaResult;
+      } catch (err: any) {
+        console.warn('Supabase upload attempt failed, falling back to backend storage:', err);
+      }
+    }
+
+    // 3. Backend upload fallback
     const formData = new FormData();
     formData.append('file', file);
 
@@ -153,10 +195,27 @@ export const api = {
     });
 
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'Failed to upload photo');
+      let errorMsg = `Upload failed with status ${res.status}`;
+      try {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const err = await res.json();
+          errorMsg = err.detail || err.message || errorMsg;
+        } else {
+          const text = await res.text();
+          errorMsg = text.trim() || errorMsg;
+        }
+      } catch {
+        // fallback
+      }
+      throw new Error(errorMsg);
     }
-    return res.json();
+
+    try {
+      return await res.json();
+    } catch {
+      throw new Error('Invalid response received from upload server.');
+    }
   },
 
   // Admin
