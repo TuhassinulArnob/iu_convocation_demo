@@ -6,10 +6,12 @@ import {
 } from 'lucide-react';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { api } from '../services/api';
+import { getRegistrationStatus } from '../config/registrationConfig';
 
 export const HomePage: React.FC = () => {
   const [notices, setNotices] = useState<any[]>([]);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const regStatus = getRegistrationStatus();
 
   useEffect(() => {
     api.getNotices()
@@ -73,9 +75,16 @@ export const HomePage: React.FC = () => {
             <div className="lg:col-span-7 space-y-5 text-white drop-shadow-sm">
               
               {/* Registration Status Pill */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-dark/80 border border-white/20 text-xs font-medium text-emerald-200 backdrop-blur-md shadow">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Registration opens on 10 Nov 2026</span>
+              <div className="inline-flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-400/40 text-xs font-semibold text-emerald-200 backdrop-blur-md shadow">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="font-bold tracking-wide uppercase">{regStatus.status}</span>
+                <span className="text-white/40 hidden sm:inline">|</span>
+                <span className="text-amber-200 font-medium">
+                  Registration Deadline: <strong className="text-[#F3A052] font-bold">{regStatus.deadlineText}</strong>
+                </span>
               </div>
 
               {/* Main Heading (58-64px target) */}
@@ -151,15 +160,21 @@ export const HomePage: React.FC = () => {
                 {/* Key Status List */}
                 <div className="space-y-3 text-xs sm:text-[13px] divide-y divide-white/10">
                   <div className="flex justify-between items-center pt-1.5">
-                    <span className="text-stone-300">Status</span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold text-xs border border-emerald-400/30">
-                      Registration opens 10 Nov 2026
+                    <span className="text-stone-300 font-medium">Status</span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-xs border border-emerald-400/30 uppercase tracking-wide">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      {regStatus.status}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center pt-2.5">
-                    <span className="text-stone-300">Registration period</span>
-                    <span className="font-semibold text-white">10 Nov – 25 Nov 2026</span>
+                    <span className="text-stone-300 font-medium">Registration Deadline</span>
+                    <span className="font-extrabold text-[#F3A052] text-sm">{regStatus.deadlineText}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2.5">
+                    <span className="text-stone-300 font-medium">Registration Period</span>
+                    <span className="font-semibold text-white">{regStatus.periodText}</span>
                   </div>
 
                   <div className="pt-2.5">

@@ -252,7 +252,47 @@ Tested via `scripts/check_overflow.py` across 9 distinct device breakpoints for 
 
 ---
 
-## 7. Demonstration Disclaimer & Limitations
+## 7. Sign In Button Redesign & Active Registration Status Update
+
+### A. Sign In Button Redesign
+* **Proportions & Metrics Verified via Playwright:**
+  - Height: exactly `48.0px` (`h-12`).
+  - Width: `105.0px` (`min-w-[105px]`).
+  - Border: `1px solid #087C73`.
+  - Border Radius: `24px` (`rounded-[24px]`).
+  - Background: `#FFFFFF` (White).
+  - Text Color: `#075C55`.
+  - Font Weight: `600` (Semi-bold).
+  - Font Size: `15–16px` (`text-[15px] xl:text-[16px]`).
+  - Hover: Subtle teal background tint `hover:bg-teal-50/80` with smooth transition (`transition-all duration-200`).
+* **Alignment with Registration Button:**
+  - Registration button height standardized to `48.0px` (`h-12`) with `y = 45.0` matching Sign In button exactly.
+  - Both buttons share identical vertical centerlines within the 80px (`h-20`) sticky navbar.
+  - Zero overflow verified at 1280px, 1366px, 1440px, and 1920px.
+* **Mobile Drawer:** Clean full-width/grid buttons with `h-11` and readable typography.
+
+### B. Active Registration Status & Deadline Update
+* **Single Source of Truth:**
+  - Created central registration configuration in `frontend/src/config/registrationConfig.ts` and `backend/app/core/config.py`.
+  - Replaced all outdated "Registration opens on 10 Nov 2026" / "Opening Soon" text with active status.
+* **Status Badge:**
+  - Clean status badge: `<badge>REGISTRATION STARTED</badge>` with pulsating emerald beacon.
+* **Prominent Registration Deadline:**
+  - Prominently displayed **Registration Deadline: 25 November 2026** across:
+    - Homepage Hero status pill & Right status summary card
+    - Registration Step 1 (Create account)
+    - Notices Key Dates card
+    - Schedule Important Dates table
+    - Countdown timer centerpiece
+    - Application footer
+* **Window Evaluation (Asia/Dhaka BST Timezone):**
+  - Registration is active through 25 November 2026 23:59:59 BST.
+  - After 25 November 2026, automatically transitions to `REGISTRATION CLOSED` both on UI and backend API.
+  - Convocation ceremony remains scheduled for Tuesday, 02 February 2027, 09:00 AM BST.
+
+---
+
+## 8. Demonstration Disclaimer & Limitations
 
 1. **Unofficial Nature:** This portal is an independent academic software engineering and UI/UX demonstration inspired by the public web pages of Islamic University Bangladesh 5th Convocation 2027. It is **not** endorsed by, operated by, or affiliated with Islamic University Bangladesh.
 2. **Simulated Payments:** No real financial transactions occur. The bKash and Rocket QR codes are displayed for demonstration and educational testing only. No money should ever be transferred to any QR code.

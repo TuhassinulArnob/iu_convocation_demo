@@ -95,11 +95,16 @@ The portal features a refined, premium university portal aesthetic with balanced
   - Card Headings: 17–19px semibold.
   - Body Text: 14–16px regular.
   - Footer & Microcopy: 11–13px.
-* **Sticky Navigation Bar:**
+* **Sticky Navigation Bar & Redesigned Authentication Actions:**
   - Header is fixed (`position: sticky; top: 0; z-index: 50`) with smooth scrolling and subtle bottom shadow (`h-20` / 80px height).
   - University emblem logo: 52px height.
-  - Buttons: Standardized 40px height with balanced `px-4.5 py-2` padding.
-  - Sign In is a clean rounded-full pill with teal border; Registration is a warm gold pill with graduation cap icon.
+  - Sign In Button: Redesigned with `min-w-[105px]`, height 48px (`h-12`), `rounded-[24px]`, border `1px solid #087C73`, white background, text `#075C55`, font weight 600, centered text, and subtle hover transition.
+  - Registration Button: Consistent 48px height (`h-12`), `rounded-[24px]`, warm gold background (`#F3A052`), bold typography, graduation cap icon, and balanced padding.
+  - Both buttons share identical `y = 45.0` vertical alignment inside the header.
+* **Active Registration Status & Prominent Deadline:**
+  - Status Badge: `<badge>REGISTRATION STARTED</badge>` with pulsating emerald beacon.
+  - Prominently displays **Registration Deadline: 25 November 2026** across Homepage, Registration Wizard, Notices, Schedule, and Countdown Timer.
+  - Timezone-aware date calculations (Asia/Dhaka, UTC+6) with automated closure after 25 November 2026.
 * **Zero Horizontal Scrollbar Across All 9 Viewports:**
   - Strict responsive layout tested and verified at 1920px, 1440px, 1366px, 1280px, 1024px, 768px, 430px, 390px, and 360px (`scrollWidth == innerWidth`).
   - Content containers standardized to `max-w-7xl` (1280px).

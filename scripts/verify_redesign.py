@@ -52,11 +52,16 @@ def run():
             vp_page.goto("http://127.0.0.1:5173/notices", wait_until="networkidle")
             vp_page.wait_for_timeout(400)
 
-            # Ensure Registration button is visible and inside bounding box
-            reg_btn = vp_page.locator("a:has-text('Registration')").first
-            box = reg_btn.bounding_box()
-            print(f"    [{w}px] Registration button: x={box['x']}, right={box['x'] + box['width']}, winWidth={w}")
-            assert box['x'] + box['width'] <= w, f"Registration button overflowed on {w}px!"
+            # Ensure Registration button and Sign In button are visible and properly sized
+            sign_in_btn = vp_page.locator("header a:has-text('Sign In')").first
+            reg_btn = vp_page.locator("header a:has-text('Registration')").last
+            box_sign = sign_in_btn.bounding_box()
+            box_reg = reg_btn.bounding_box()
+            print(f"    [{w}px] Sign In button: width={box_sign['width']:.1f}px, height={box_sign['height']:.1f}px, x={box_sign['x']:.1f}, y={box_sign['y']:.1f}")
+            print(f"    [{w}px] Registration button: width={box_reg['width']:.1f}px, height={box_reg['height']:.1f}px, right={box_reg['x'] + box_reg['width']:.1f}, winWidth={w}, y={box_reg['y']:.1f}")
+            assert box_reg['x'] + box_reg['width'] <= w, f"Registration button overflowed on {w}px!"
+            assert box_sign['width'] >= 100, f"Sign In button width ({box_sign['width']}px) is less than 100px!"
+            assert box_sign['height'] == box_reg['height'], f"Button heights do not match: {box_sign['height']} != {box_reg['height']}"
 
             shot_path = os.path.join(OUTPUT_DIR, f"05_navbar_{w}px.png")
             vp_page.screenshot(path=shot_path, clip={"x": 0, "y": 0, "width": w, "height": 140})
@@ -92,6 +97,40 @@ def run():
                 print(f"    Saved: {drawer_shot}")
 
             vp_page.close()
+
+        print("[*] 7. Verifying Registration Status Badges and Deadlines across pages...")
+        # Check Home page
+        page.goto("http://127.0.0.1:5173/", wait_until="networkidle")
+        page.wait_for_timeout(400)
+        content_home = page.content()
+        assert "REGISTRATION STARTED" in content_home, "REGISTRATION STARTED missing from Home page!"
+        assert "25 November 2026" in content_home, "Deadline 25 November 2026 missing from Home page!"
+        assert "opens on 10 Nov" not in content_home, "Outdated 'opens on 10 Nov' found on Home page!"
+        print("    [Home] REGISTRATION STARTED & 25 November 2026 verified.")
+
+        # Check Register Wizard Step 1
+        page.goto("http://127.0.0.1:5173/register", wait_until="networkidle")
+        page.wait_for_timeout(400)
+        content_reg = page.content()
+        assert "REGISTRATION STARTED" in content_reg, "REGISTRATION STARTED missing from Register page!"
+        assert "25 November 2026" in content_reg, "Deadline 25 November 2026 missing from Register page!"
+        print("    [Register Wizard] REGISTRATION STARTED & 25 November 2026 verified.")
+
+        # Check Notices Page
+        page.goto("http://127.0.0.1:5173/notices", wait_until="networkidle")
+        page.wait_for_timeout(400)
+        content_notices = page.content()
+        assert "REGISTRATION STARTED" in content_notices, "REGISTRATION STARTED missing from Notices page!"
+        assert "25 November 2026" in content_notices, "Deadline 25 November 2026 missing from Notices page!"
+        print("    [Notices] REGISTRATION STARTED & 25 November 2026 verified.")
+
+        # Check Schedule Page
+        page.goto("http://127.0.0.1:5173/schedule", wait_until="networkidle")
+        page.wait_for_timeout(400)
+        content_sched = page.content()
+        assert "REGISTRATION STARTED" in content_sched, "REGISTRATION STARTED missing from Schedule page!"
+        assert "25 November 2026" in content_sched, "Deadline 25 November 2026 missing from Schedule page!"
+        print("    [Schedule] REGISTRATION STARTED & 25 November 2026 verified.")
 
         browser.close()
         print("\n[OK] All verification tests passed cleanly!")

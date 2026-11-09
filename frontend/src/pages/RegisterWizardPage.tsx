@@ -8,9 +8,11 @@ import {
 } from 'lucide-react';
 import { api, setAuthToken, setCurrentUser, getAuthToken, clearAuthToken } from '../services/api';
 import { PageHero } from '../components/PageHero';
+import { getRegistrationStatus } from '../config/registrationConfig';
 
 export const RegisterWizardPage: React.FC = () => {
   const navigate = useNavigate();
+  const regStatus = getRegistrationStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -535,15 +537,40 @@ export const RegisterWizardPage: React.FC = () => {
                 Only graduates in the official list can create an account.
               </p>
 
-              <div className="flex flex-wrap justify-center gap-2 mt-4 text-xs">
-                <span className="px-3 py-1 rounded-lg bg-teal-50 text-teal-deep font-semibold border border-teal-100">
-                  📅 Registration opens 10 Nov 2026
+              <div className="flex flex-wrap items-center justify-center gap-2.5 mt-4 text-xs">
+                {regStatus.isOpen ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 uppercase tracking-wide">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    {regStatus.status}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 text-rose-800 font-bold border border-rose-300 uppercase tracking-wide">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    {regStatus.status}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-900 font-bold border border-amber-300">
+                  <span>⏰ Registration Deadline:</span>
+                  <span className="text-amber-950 font-extrabold">{regStatus.deadlineText}</span>
                 </span>
-                <span className="px-3 py-1 rounded-lg bg-teal-50 text-teal-deep font-semibold border border-teal-100">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-deep font-semibold border border-teal-100">
                   🏛️ Ceremony 02 Feb 2027, 09:00 AM
                 </span>
               </div>
             </div>
+
+            {!regStatus.isOpen && (
+              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center gap-3">
+                <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0" />
+                <div>
+                  <p className="font-bold">Online Registration is Closed</p>
+                  <p className="text-stone-600 mt-0.5">The deadline for convocation registration was {regStatus.deadlineText}. New submissions are no longer accepted.</p>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleStep1Submit} className="space-y-5" noValidate>
               

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.deps import get_current_user
 from app.models.models import User, Application, Department, FeeBreakdown, ApplicationStatusHistory
@@ -24,6 +25,14 @@ def generate_app_id(db: Session) -> str:
 
 @router.post("/register-step1", response_model=TokenResponse)
 def register_step1(req: Step1RegisterRequest, db: Session = Depends(get_db)):
+    # Check registration period window
+    reg_status, is_open = settings.get_registration_status()
+    if not is_open:
+        raise HTTPException(
+            status_code=400,
+            detail="Online registration is closed. The deadline was 25 November 2026."
+        )
+
     # Validate department selection
     if not req.department_id or req.department_id <= 0:
         raise HTTPException(status_code=400, detail="Please select a valid department from the dropdown list.")

@@ -123,7 +123,7 @@ export const Navbar: React.FC = () => {
                   {user?.role === 'admin' ? (
                     <Link
                       to="/admin"
-                      className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#117A78] text-[#075C55] bg-teal-50 hover:bg-teal-100 text-sm font-bold whitespace-nowrap transition"
+                      className="inline-flex items-center gap-1.5 h-12 px-5 rounded-[24px] border border-[#087C73] text-[#075C55] bg-teal-50 hover:bg-teal-100 text-[15px] font-bold whitespace-nowrap transition-all shadow-sm"
                     >
                       <ShieldCheck className="w-4 h-4" />
                       <span>Admin Panel</span>
@@ -131,7 +131,7 @@ export const Navbar: React.FC = () => {
                   ) : (
                     <Link
                       to="/dashboard"
-                      className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#117A78] text-[#075C55] bg-teal-50 hover:bg-teal-100 text-sm font-bold whitespace-nowrap transition"
+                      className="inline-flex items-center gap-1.5 h-12 px-5 rounded-[24px] border border-[#087C73] text-[#075C55] bg-teal-50 hover:bg-teal-100 text-[15px] font-bold whitespace-nowrap transition-all shadow-sm"
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       <span>Dashboard</span>
@@ -139,7 +139,7 @@ export const Navbar: React.FC = () => {
                   )}
                   <button
                     onClick={handleLogout}
-                    className="inline-flex items-center gap-1 h-10 px-3 text-stone-600 hover:text-rose-600 hover:bg-rose-50 rounded-full text-sm font-medium whitespace-nowrap transition"
+                    className="inline-flex items-center gap-1 h-12 px-4 text-stone-600 hover:text-rose-600 hover:bg-rose-50 rounded-[24px] text-sm font-semibold whitespace-nowrap transition-all"
                     title="Sign Out"
                   >
                     <LogOut className="w-4 h-4" />
@@ -147,18 +147,18 @@ export const Navbar: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-3 shrink-0">
                   <Link
                     to="/login"
-                    className="inline-flex items-center justify-center h-10 rounded-full border border-[#117A78] text-[#075C55] hover:bg-teal-50 px-4.5 py-2 font-semibold text-[14.5px] transition-all whitespace-nowrap"
+                    className="inline-flex items-center justify-center min-w-[105px] h-12 rounded-[24px] border border-[#087C73] bg-white text-[#075C55] hover:bg-teal-50/80 px-5 py-2.5 font-semibold text-[15px] xl:text-[16px] shadow-sm transition-all duration-200 whitespace-nowrap"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-[#F3A052] hover:bg-[#E08E41] text-stone-900 px-5 py-2 font-bold shadow-sm transition-all whitespace-nowrap text-[14.5px]"
+                    className="inline-flex items-center justify-center gap-2 h-12 rounded-[24px] bg-[#F3A052] hover:bg-[#E08E41] text-stone-900 px-6 py-2.5 font-bold shadow-sm transition-all duration-200 whitespace-nowrap text-[15px] xl:text-[16px]"
                   >
-                    <GraduationCap className="w-4 h-4 text-stone-900" />
+                    <GraduationCap className="w-4 h-4 text-stone-900 shrink-0" />
                     <span>Registration</span>
                   </Link>
                 </div>
@@ -261,18 +261,18 @@ export const Navbar: React.FC = () => {
                 </button>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 px-4 rounded-full border border-[#117A78] text-[#075C55] hover:bg-teal-50 font-semibold text-sm flex items-center justify-center"
+                  className="w-full text-center h-11 rounded-full border border-[#087C73] text-[#075C55] bg-white hover:bg-teal-50 font-semibold text-sm flex items-center justify-center shadow-sm transition-all"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-2.5 px-4 rounded-full bg-[#F3A052] hover:bg-[#E08E41] text-stone-900 font-bold text-sm flex items-center justify-center gap-1.5 shadow-sm"
+                  className="w-full text-center h-11 rounded-full bg-[#F3A052] hover:bg-[#E08E41] text-stone-900 font-bold text-sm flex items-center justify-center gap-1.5 shadow-sm transition-all"
                 >
                   <GraduationCap className="w-4 h-4 text-stone-900" />
                   <span>Registration</span>

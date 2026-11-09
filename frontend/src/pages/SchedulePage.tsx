@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { PageHero } from '../components/PageHero';
 import { api } from '../services/api';
+import { getRegistrationStatus } from '../config/registrationConfig';
 
 export const SchedulePage: React.FC = () => {
+  const regStatus = getRegistrationStatus();
   const [config, setConfig] = useState<any>(null);
 
   useEffect(() => {
@@ -59,12 +61,19 @@ export const SchedulePage: React.FC = () => {
                 <div>
                   <h3 className="text-base font-bold text-teal-dark">Online registration</h3>
                   <p className="font-bengali text-xs text-stone-500 font-medium">অনলাইন নিবন্ধন</p>
-                  <p className="text-xs text-stone-600 mt-1">Tuesday, 10 Nov 2026 – Wednesday, 25 Nov 2026</p>
-                  <p className="text-xs text-stone-500">Create an account, fill in the form and pay the fee.</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    <span className="text-stone-600 font-medium">Period: {regStatus.periodText}</span>
+                    <span className="text-stone-300">·</span>
+                    <span className="font-bold text-teal-dark bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                      Registration Deadline: {regStatus.deadlineText}
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-500 mt-0.5">Create an account, fill in the form and pay the fee.</p>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold shrink-0">
-                Opening Soon
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold shrink-0 uppercase tracking-wide">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {regStatus.status}
               </span>
             </div>
 

@@ -1,5 +1,6 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from typing import Optional
 
 class Settings:
     PROJECT_NAME: str = "IU 5th Convocation 2027 — Demonstration Portal"
@@ -16,6 +17,27 @@ class Settings:
     CEREMONY_DATETIME: str = "2027-02-02T09:00:00+06:00"
     CEREMONY_VENUE: str = "Central Playground, Islamic University Campus, Kushtia"
     TIMEZONE: str = "Asia/Dhaka"
+
+    def get_registration_status(self, current_dt: Optional[datetime] = None) -> tuple[str, bool]:
+        """
+        Determines registration status based on Bangladesh time (Asia/Dhaka):
+        - Registration started from 10 November 2026 through 25 November 2026 23:59:59 BST: "REGISTRATION STARTED"
+        - After 25 November 2026: "REGISTRATION CLOSED"
+        """
+        if current_dt is None:
+            try:
+                import zoneinfo
+                tz = zoneinfo.ZoneInfo(self.TIMEZONE)
+                current_dt = datetime.now(tz)
+            except Exception:
+                tz = timezone(timedelta(hours=6))
+                current_dt = datetime.now(tz)
+        
+        end_dt = datetime.fromisoformat(self.REGISTRATION_END)
+        if current_dt > end_dt:
+            return "REGISTRATION CLOSED", False
+        
+        return "REGISTRATION STARTED", True
 
     # Fee configurations (as specified in guidelines)
     REGISTRATION_FEE_REGULAR: float = 4500.0

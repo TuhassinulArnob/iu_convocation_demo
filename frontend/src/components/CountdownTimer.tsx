@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
+import { EVENT_CONFIG, getRegistrationStatus } from '../config/registrationConfig';
 
 interface TimeLeft {
   days: number;
@@ -10,8 +11,9 @@ interface TimeLeft {
 }
 
 export const CountdownTimer: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
-  // Target: 02 February 2027, 09:00 AM BST (+06:00)
-  const targetTime = new Date('2027-02-02T09:00:00+06:00').getTime();
+  // Target: 02 February 2027, 09:00 AM BST (+06:00) from central configuration
+  const targetTime = new Date(EVENT_CONFIG.ceremonyDatetime).getTime();
+  const { status, isOpen, deadlineText } = getRegistrationStatus();
 
   const calculateTimeLeft = (): TimeLeft => {
     const now = new Date().getTime();
@@ -109,6 +111,28 @@ export const CountdownTimer: React.FC<{ compact?: boolean }> = ({ compact = fals
             SECONDS
           </span>
         </div>
+      </div>
+
+      {/* Registration Status & Deadline Strip */}
+      <div className="mt-3.5 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-medium text-stone-300">
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider border ${
+            isOpen
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+              : 'bg-rose-500/20 text-rose-300 border-rose-400/30'
+          }`}
+        >
+          {isOpen ? (
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          ) : (
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          )}
+          <span>{status}</span>
+        </span>
+        <span className="text-stone-300">
+          Registration Deadline:{' '}
+          <strong className="text-[#F3A052] font-bold">{deadlineText}</strong>
+        </span>
       </div>
     </div>
   );

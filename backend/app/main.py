@@ -76,15 +76,22 @@ def root():
 
 @app.get("/api/config")
 def get_public_config():
+    reg_status, is_open = settings.get_registration_status()
     return {
         "event_name": "5th Convocation 2027",
         "bangla_name": "৫ম সমাবর্তন ২০২৭",
         "institution": "Islamic University Bangladesh",
         "location": "Kushtia, Bangladesh",
         "ceremony_datetime": settings.CEREMONY_DATETIME,
+        "ceremony_date_formatted": "Tuesday, 02 February 2027",
+        "ceremony_time_formatted": "09:00 AM BST",
         "ceremony_venue": settings.CEREMONY_VENUE,
         "registration_start": settings.REGISTRATION_START,
         "registration_end": settings.REGISTRATION_END,
+        "registration_deadline": "25 November 2026",
+        "registration_period": "10 Nov – 25 Nov 2026",
+        "registration_status": reg_status,
+        "is_registration_open": is_open,
         "timezone": settings.TIMEZONE,
         "official_url": "https://convocation.iu.ac.bd/",
         "university_url": "https://iu.ac.bd/"

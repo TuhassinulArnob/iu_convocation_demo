@@ -140,8 +140,8 @@ export const Footer: React.FC = () => {
               <span>5th Convocation 2027</span>
             </div>
             <p className="leading-relaxed text-[12px] text-stone-300">
-              <strong className="text-white">Date:</strong> Tuesday, 02 Feb 2027<br />
-              <strong className="text-white">Time:</strong> 09:00 AM BST<br />
+              <strong className="text-white">Registration:</strong> Started (Deadline: 25 Nov 2026)<br />
+              <strong className="text-white">Ceremony Date:</strong> Tuesday, 02 Feb 2027<br />
               <strong className="text-white">Venue:</strong> Central Playground, IU Campus
             </p>
             <div className="pt-2 border-t border-white/10">

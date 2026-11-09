@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { Search, Calendar, FileText, ArrowRight, Mail, Download, X, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 import { PageHero } from '../components/PageHero';
+import { getRegistrationStatus } from '../config/registrationConfig';
 
 export const NoticesPage: React.FC = () => {
+  const regStatus = getRegistrationStatus();
   const [notices, setNotices] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -162,21 +164,27 @@ export const NoticesPage: React.FC = () => {
             
             {/* KEY DATES Card */}
             <div className="bg-white rounded-2xl p-6 border border-iu-border shadow-sm">
-              <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-4">
-                KEY DATES
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider">
+                  KEY DATES
+                </h3>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px] border border-emerald-300 uppercase tracking-wide">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {regStatus.status}
+                </span>
+              </div>
               
               <div className="space-y-4 text-sm divide-y divide-stone-100">
                 <div className="flex justify-between items-center pt-1">
-                  <span className="text-stone-600">Registration opens</span>
-                  <span className="font-bold text-teal-dark">10 Nov 2026</span>
+                  <span className="text-stone-600 font-medium">Registration Deadline</span>
+                  <span className="font-extrabold text-teal-dark">{regStatus.deadlineText}</span>
                 </div>
                 <div className="flex justify-between items-center pt-3">
-                  <span className="text-stone-600">Registration closes</span>
-                  <span className="font-bold text-teal-dark">25 Nov 2026</span>
+                  <span className="text-stone-600">Registration Period</span>
+                  <span className="font-semibold text-stone-800">{regStatus.periodText}</span>
                 </div>
                 <div className="flex justify-between items-center pt-3">
-                  <span className="text-stone-600">Convocation ceremony</span>
+                  <span className="text-stone-600">Convocation Ceremony</span>
                   <span className="font-bold text-teal-deep">02 Feb 2027</span>
                 </div>
               </div>
