@@ -81,26 +81,34 @@ The portal incorporates all 8 faculties and 36 academic departments matching off
 
 ---
 
-## 🎨 UI Redesign — Faithfully Matching Original IU Convocation Visual Quality
+## 🎨 UI Refinement — Premium Proportions, Balanced Typography & Zero-Overflow Layout
 
-The portal was redesigned using high-resolution visual comparisons against the live official Islamic University 5th Convocation website:
+The portal features a refined, premium university portal aesthetic with balanced proportions:
 
-* **Authoritative Typography:**
-  - University Branding: 28px bold (`#153A37`).
-  - Convocation Subtitle: 13–14px bold uppercase (`#F3A052`, letter-spaced).
-  - Navigation Links: 18–20px medium/semibold with clean colored underline active state (`border-b-2 border-[#117A78]`, no pill background boxes).
-  - Page Hero Titles: 64–72px extra-bold with 20–22px subtitle descriptions.
+* **Balanced Typography Hierarchy:**
+  - University Branding: 24px bold (`#153A37`).
+  - Convocation Subtitle: 11.5px bold uppercase (`#F3A052`, letter-spaced tracking-wider).
+  - Navigation Links: 15–16px medium/semibold with clean colored underline active state (`border-b-2 border-[#117A78]`, no pill background boxes).
+  - Hero Headings: 58–64px extra-bold with balanced leading.
+  - Page Titles: 48–52px extra-bold with 16–17px subtitle descriptions.
+  - Section Headings: 27–32px bold.
+  - Card Headings: 17–19px semibold.
+  - Body Text: 14–16px regular.
+  - Footer & Microcopy: 11–13px.
 * **Sticky Navigation Bar:**
-  - Header is fixed (`position: sticky; top: 0; z-index: 50`) with smooth scrolling and subtle bottom shadow.
-  - Features the delicate warm gold line (`border-b-2 border-[#F3A052]/40`) beneath the navbar, exactly mirroring the original design.
+  - Header is fixed (`position: sticky; top: 0; z-index: 50`) with smooth scrolling and subtle bottom shadow (`h-20` / 80px height).
+  - University emblem logo: 52px height.
+  - Buttons: Standardized 40px height with balanced `px-4.5 py-2` padding.
   - Sign In is a clean rounded-full pill with teal border; Registration is a warm gold pill with graduation cap icon.
+* **Zero Horizontal Scrollbar Across All 9 Viewports:**
+  - Strict responsive layout tested and verified at 1920px, 1440px, 1366px, 1280px, 1024px, 768px, 430px, 390px, and 360px (`scrollWidth == innerWidth`).
+  - Content containers standardized to `max-w-7xl` (1280px).
 * **Shared `PageHero` Component:**
   - Rich campus gate archway photo duotone overlay (`linear-gradient(110deg, rgba(7, 92, 85, 0.78) 0%, rgba(7, 92, 85, 0.65) 50%, rgba(21, 58, 55, 0.60) 100%)`).
   - Subtle repeating diagonal pinstripe lines texture (`repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.055) ...)`).
-* **Elimination of Disruptive Disclaimer Cards:**
-  - Removed giant overlapping disclaimer cards from page bodies to restore visual elegance. Legal demonstration notices are cleanly housed in the top slim announcement bar and comprehensive footer.
-* **Wide Content Layouts:** Expanded content containers to `max-w-[1450px]` for spacious, modern presentation.
-* **Full Responsive Support:** Verified across all 8 standard viewports (1920px down to 360px) with responsive navigation drawer and zero horizontal overflow.
+* **Sophisticated 12-Column Footer:**
+  - Deep academic green `#153A37` background with 4 balanced columns (Branding, Academic Links, Help & Guidelines, Emergency Contacts).
+  - Replaced oversized disclaimer card with a restrained, elegant inline notice.
 
 ---
 

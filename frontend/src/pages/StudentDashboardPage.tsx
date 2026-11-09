@@ -86,7 +86,7 @@ export const StudentDashboardPage: React.FC = () => {
       
       {/* Top Header */}
       <div className="bg-teal-dark text-white py-10 no-print">
-        <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <span className="text-xs font-bold text-gold-warm uppercase tracking-widest block mb-1">
               STUDENT DEMONSTRATION DASHBOARD
@@ -120,7 +120,7 @@ export const StudentDashboardPage: React.FC = () => {
       </div>
 
       {/* Main Grid */}
-      <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 pt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column (8 cols) */}

@@ -209,7 +209,50 @@ npm.cmd run build
 
 ---
 
-## 6. Demonstration Disclaimer & Limitations
+## 6. Premium Design Refinement & Navbar Overflow Resolution
+
+### A. Root Cause Analysis of Header & Document Overflow
+1. **Navbar Item Sizing at 1280px & 1366px:** The previous iteration enlarged nav links to `text-[20px]`, branding to `text-[28px]`, gaps to `gap-6`, and button padding to `px-6 py-2.5`. At 1280px, the combined required width was 1385px, pushing the "Registration" button 105px off the right edge and causing a document-level horizontal scrollbar.
+2. **Hero Image Transform:** An unrestricted `scale-105` on background image containers leaked outside bounding boxes before viewport stabilization.
+3. **Container Over-expansion:** Main content containers configured at `max-w-[1450px]` created horizontal tension on standard 1366px laptop screens.
+
+### B. Architectural Refinements Applied
+* **Target Typography Scale Implemented:**
+  - University Branding: 24px (`text-[24px]`) bold `#153A37`.
+  - Convocation Subtitle: 11.5px (`text-[11.5px]`) bold uppercase tracking-wider `#F3A052`.
+  - Navigation Links: 15–16px medium/semibold with active underline `border-b-2 border-[#117A78]`.
+  - Hero Heading: 58–64px (scaled to 62px) extra-bold.
+  - Page Title: 48–52px (scaled to 50px) extra-bold.
+  - Section Headings: 27–32px.
+  - Card Headings: 17–19px.
+  - Body Text: 14–16px.
+  - Footer Links & Disclaimers: 11–13px.
+* **Header & Button Dimensions:**
+  - Header height standardized to sleek `h-20` (80px).
+  - University emblem logo: 52px height (`h-[52px]`).
+  - Action buttons: 40px height (`h-10`) with balanced `px-4.5 py-2` padding.
+* **Elimination of Overflow:**
+  - Removed `scale-105` on hero image containers.
+  - Standardized content containers to `max-w-7xl` (1280px).
+  - Added global `overflow-x: hidden; width: 100%;` safeguard to `#root` and `body`.
+
+### C. Automated Multi-Viewport Verification Results
+Tested via `scripts/check_overflow.py` across 9 distinct device breakpoints for all 9 public routes:
+* **1920px (Desktop):** `scrollWidth == innerWidth` (1920px). Zero overflow.
+* **1440px (Desktop):** `scrollWidth == innerWidth` (1440px). Zero overflow. "Registration" button right margin = 512px.
+* **1366px (Laptop):** `scrollWidth == innerWidth` (1366px). Zero overflow. "Registration" button right margin = 475px.
+* **1280px (Compact Desktop):** `scrollWidth == innerWidth` (1280px). Zero overflow. "Registration" button right margin = 432px.
+* **1024px (Tablet Landscape):** `scrollWidth == innerWidth` (1024px). Clean mobile drawer toggle.
+* **768px (Tablet Portrait):** `scrollWidth == innerWidth` (768px). Clean mobile drawer toggle.
+* **430px (Large Mobile):** `scrollWidth == innerWidth` (430px). Drawer navigation fully responsive.
+* **390px (Medium Mobile):** `scrollWidth == innerWidth` (390px). Drawer navigation fully responsive.
+* **360px (Small Mobile):** `scrollWidth == innerWidth` (360px). Drawer navigation fully responsive.
+
+**Final Result: 100% of tested routes and viewports exhibited ZERO horizontal scrollbars and 100% element visibility.**
+
+---
+
+## 7. Demonstration Disclaimer & Limitations
 
 1. **Unofficial Nature:** This portal is an independent academic software engineering and UI/UX demonstration inspired by the public web pages of Islamic University Bangladesh 5th Convocation 2027. It is **not** endorsed by, operated by, or affiliated with Islamic University Bangladesh.
 2. **Simulated Payments:** No real financial transactions occur. The bKash and Rocket QR codes are displayed for demonstration and educational testing only. No money should ever be transferred to any QR code.

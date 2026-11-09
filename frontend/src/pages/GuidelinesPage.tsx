@@ -56,7 +56,7 @@ export const GuidelinesPage: React.FC = () => {
       />
 
       {/* Main 5-Step Process */}
-      <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 pt-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-bold text-gold-warm uppercase tracking-widest block mb-2">
@@ -133,7 +133,7 @@ export const GuidelinesPage: React.FC = () => {
       </div>
 
       {/* Detailed Checklists & Requirements */}
-      <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
           <div className="bg-white rounded-2xl p-6 border border-iu-border shadow-sm">

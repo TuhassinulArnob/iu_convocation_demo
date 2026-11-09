@@ -58,7 +58,7 @@ export const TrackApplicationPage: React.FC = () => {
         className="no-print"
       />
 
-      <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 pt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
         {/* Tracking Input Card */}
         <div className="bg-white rounded-2xl border border-iu-border shadow-sm p-6 sm:p-8 mb-8 no-print">

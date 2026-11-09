@@ -34,7 +34,7 @@ export const SchedulePage: React.FC = () => {
         eyebrow="5TH CONVOCATION 2027"
       />
 
-      <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 pt-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
         {/* Countdown Centerpiece */}
         <div className="flex flex-col items-center justify-center mb-12">

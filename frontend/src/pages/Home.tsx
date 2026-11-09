@@ -43,17 +43,17 @@ export const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-iu-bg">
       {/* SECTION B & C: Hero Section with Background and Dark Teal Overlay */}
-      <section className="relative min-h-[600px] lg:min-h-[680px] bg-[#075C55] overflow-hidden flex items-center">
-        {/* Background Campus Main Gate Image - clearly recognizable */}
+      <section className="relative min-h-[560px] lg:min-h-[640px] bg-[#075C55] overflow-hidden flex items-center w-full">
+        {/* Background Campus Main Gate Image - cleanly contained */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-90 scale-105 transform transition duration-1000"
+          className="absolute inset-0 bg-cover bg-center opacity-90 transition duration-1000"
           style={{ backgroundImage: `url('/assets/reference/background_mainGateImage.webp')` }}
         />
         {/* Optimized Teal Gradient Overlay - keeping photo visible while preserving high text contrast */}
         <div 
           className="absolute inset-0" 
           style={{
-            background: 'linear-gradient(110deg, rgba(7, 92, 85, 0.60) 0%, rgba(7, 92, 85, 0.42) 50%, rgba(21, 58, 55, 0.38) 100%)'
+            background: 'linear-gradient(110deg, rgba(7, 92, 85, 0.65) 0%, rgba(7, 92, 85, 0.45) 50%, rgba(21, 58, 55, 0.40) 100%)'
           }}
         />
 
@@ -66,107 +66,107 @@ export const HomePage: React.FC = () => {
           }}
         />
 
-        <div className="relative max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12 py-16 lg:py-24 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-18 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
             
             {/* Left Hero Content */}
-            <div className="lg:col-span-7 space-y-6 text-white drop-shadow-sm">
+            <div className="lg:col-span-7 space-y-5 text-white drop-shadow-sm">
               
               {/* Registration Status Pill */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-dark/80 border border-white/30 text-xs sm:text-sm font-semibold text-emerald-200 backdrop-blur-md shadow">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-dark/80 border border-white/20 text-xs font-medium text-emerald-200 backdrop-blur-md shadow">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span>Registration opens on 10 Nov 2026</span>
               </div>
 
-              {/* Main Heading */}
-              <div className="space-y-1.5">
-                <h1 className="text-5xl sm:text-6xl lg:text-[72px] font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
+              {/* Main Heading (58-64px target) */}
+              <div className="space-y-1">
+                <h1 className="text-4xl sm:text-5xl lg:text-[62px] font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
                   5th Convocation 2027
                 </h1>
-                <h2 className="font-bengali text-2xl sm:text-3xl lg:text-4xl font-bold text-gold-warm drop-shadow-md">
+                <h2 className="font-bengali text-xl sm:text-2xl lg:text-[28px] font-bold text-gold-warm drop-shadow-sm">
                   পঞ্চম সমাবর্তন ২০২৭
                 </h2>
               </div>
 
               {/* Subtitle */}
-              <p className="text-base sm:text-xl lg:text-[21px] text-stone-100 max-w-2xl leading-relaxed font-normal">
+              <p className="text-sm sm:text-base lg:text-[17px] text-stone-100 max-w-xl leading-relaxed font-normal">
                 Online registration for graduates of Islamic University Bangladesh — Honours, Masters, M.Phil, PhD and Masters (Professional/Evening) programs.
               </p>
 
               {/* Date & Venue Cards */}
-              <div className="space-y-2.5 pt-2 text-sm sm:text-base text-stone-200">
-                <div className="flex items-center gap-3">
+              <div className="space-y-2 pt-1 text-xs sm:text-sm text-stone-200">
+                <div className="flex items-center gap-2.5">
                   <Calendar className="w-4 h-4 text-gold-warm shrink-0" />
                   <span className="font-medium">Tuesday, 02 February 2027 · 09:00 AM BST</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <MapPin className="w-4 h-4 text-gold-warm shrink-0" />
                   <span>Central Playground, Islamic University Campus, Kushtia</span>
                 </div>
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-wrap items-center gap-4 pt-3">
+              <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Link
                   to="/register"
-                  className="px-7 py-3.5 bg-gold-warm hover:bg-gold-hover text-stone-900 font-extrabold rounded-full shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2 text-base"
+                  className="px-6 py-2.5 bg-gold-warm hover:bg-gold-hover text-stone-900 font-bold rounded-full shadow transition flex items-center gap-2 text-sm sm:text-[15px]"
                 >
                   <span>Register Now</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   to="/login"
-                  className="px-7 py-3.5 border-2 border-white/50 hover:border-white text-white font-bold rounded-full hover:bg-white/10 transition backdrop-blur-sm text-base"
+                  className="px-5 py-2.5 border border-white/40 hover:border-white text-white font-semibold rounded-full hover:bg-white/10 transition backdrop-blur-sm text-sm sm:text-[15px]"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/track-application"
-                  className="px-6 py-3.5 bg-teal-dark/80 hover:bg-teal-dark text-emerald-200 border border-emerald-400/40 rounded-full transition text-base font-semibold"
+                  className="px-5 py-2.5 bg-teal-dark/70 hover:bg-teal-dark text-emerald-200 border border-emerald-400/30 rounded-full transition text-sm font-medium"
                 >
                   Track Application
                 </Link>
               </div>
 
               {/* Countdown Component */}
-              <div className="pt-4">
+              <div className="pt-3">
                 <CountdownTimer />
               </div>
 
             </div>
 
-            {/* Right Hero Card: Matching Screenshot (443).png */}
+            {/* Right Hero Card */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 sm:p-8 shadow-2xl text-white">
+              <div className="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5 sm:p-6 shadow-xl text-white">
                 
                 {/* Logo Box */}
-                <div className="bg-white p-5 rounded-2xl flex items-center justify-center shadow-md mb-6">
+                <div className="bg-white p-4 rounded-xl flex items-center justify-center shadow-sm mb-5">
                   <img 
                     src="/assets/logo/convoLogo.png" 
                     alt="5th Convocation Official Logo" 
-                    className="max-h-52 w-auto object-contain hover:scale-105 transition-transform"
+                    className="max-h-44 w-auto object-contain hover:scale-105 transition-transform"
                   />
                 </div>
 
                 {/* Key Status List */}
-                <div className="space-y-4 text-sm divide-y divide-white/10">
-                  <div className="flex justify-between items-center pt-2">
+                <div className="space-y-3 text-xs sm:text-[13px] divide-y divide-white/10">
+                  <div className="flex justify-between items-center pt-1.5">
                     <span className="text-stone-300">Status</span>
-                    <span className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-semibold text-xs border border-emerald-400/30">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold text-xs border border-emerald-400/30">
                       Registration opens 10 Nov 2026
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center pt-3">
+                  <div className="flex justify-between items-center pt-2.5">
                     <span className="text-stone-300">Registration period</span>
                     <span className="font-semibold text-white">10 Nov – 25 Nov 2026</span>
                   </div>
 
-                  <div className="pt-3">
-                    <span className="text-stone-300 text-xs block mb-2">Eligible degree categories</span>
+                  <div className="pt-2.5">
+                    <span className="text-stone-300 text-xs block mb-1.5">Eligible degree categories</span>
                     <div className="flex flex-wrap gap-1.5">
-                      {["Honours", "Masters", "M.Phil", "PhD", "Masters (Professional/Evening)"].map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 bg-white/15 rounded-md text-[11px] font-medium text-stone-200">
+                      {["Honours", "Masters", "M.Phil", "PhD", "Masters (Evening)"].map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 bg-white/15 rounded text-[11px] font-medium text-stone-200">
                           {tag}
                         </span>
                       ))}
@@ -182,7 +182,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* SECTION E: Registration Steps */}
-      <section className="py-16 max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12">
+      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-bold text-gold-warm uppercase tracking-widest block mb-2">
             HOW IT WORKS
@@ -265,7 +265,7 @@ export const HomePage: React.FC = () => {
 
       {/* SECTION F & G: Fee Overview & Notices Grid */}
       <section className="py-12 bg-stone-100/60 border-y border-iu-border">
-        <div className="max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Fee Overview Card */}
@@ -366,7 +366,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* SECTION I: Campus Gallery Section */}
-      <section className="py-16 max-w-[1450px] mx-auto px-4 sm:px-8 lg:px-12">
+      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <span className="text-xs font-bold text-gold-warm uppercase tracking-widest block mb-2">
             CAMPUS IDENTITY
