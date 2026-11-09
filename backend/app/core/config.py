@@ -1,0 +1,39 @@
+import os
+from datetime import datetime
+
+class Settings:
+    PROJECT_NAME: str = "IU 5th Convocation 2027 — Demonstration Portal"
+    DEMO_MODE: bool = True
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "iu_convocation_2027_demo_super_secret_jwt_key_987654321")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days for demo ease
+    
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./convocation.db")
+    
+    # Official event reference schedule
+    REGISTRATION_START: str = "2026-11-10T00:00:00+06:00"
+    REGISTRATION_END: str = "2026-11-25T23:59:59+06:00"
+    CEREMONY_DATETIME: str = "2027-02-02T09:00:00+06:00"
+    CEREMONY_VENUE: str = "Central Playground, Islamic University Campus, Kushtia"
+    TIMEZONE: str = "Asia/Dhaka"
+
+    # Fee configurations (as specified in guidelines)
+    REGISTRATION_FEE_REGULAR: float = 4500.0
+    REGISTRATION_FEE_EVENING: float = 5500.0
+    
+    CERTIFICATE_FEES = {
+        "Bachelor": 500.0,
+        "Honours": 500.0,
+        "Undergraduate": 500.0,
+        "Masters": 700.0,
+        "M.Phil": 1500.0,
+        "PhD": 2000.0,
+        "Masters (Professional/Evening)": 1000.0,
+        "Evening Masters": 1000.0,
+    }
+    
+    GUEST_FEE_PER_PERSON: float = 1000.0
+    MAX_GUESTS: int = 3
+    SERVICE_CHARGE: float = 32.50
+
+settings = Settings()
